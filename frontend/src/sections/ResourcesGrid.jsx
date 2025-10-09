@@ -12,8 +12,9 @@ const ResourceCard = ({ title, text }) => (
 
 export default function ResourcesGrid() {
   return (
-    <section className="relative bg-[#A8E6A3]">
-      <div className="container mx-auto px-6 py-12">
+     <section className="relative bg-[#A8E6A3] min-h-full h-screen flex items-center">
+      <div className="container mx-auto px-6 py-12 w-full">
+        {/* ... */}
         <h3 className="text-white text-5xl sm:text-6xl font-extrabold mb-8">Recursos a serem utilizados</h3>
         <div className="grid md:grid-cols-3 gap-6">
           <ResourceCard title="MANUAL DE INSTRUÇÕES" text="O que terá para sua utilidade e seus alcances." />
@@ -24,3 +25,4 @@ export default function ResourcesGrid() {
     </section>
   );
 }
+    

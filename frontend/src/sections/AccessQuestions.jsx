@@ -14,11 +14,11 @@ function Bullet({ title, text }) {
 
 export default function AccessQuestions() {
   return (
-    <section className="bg-[#CDECF9]">
-      <div className="container mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 items-start">
+   <section className="bg-[#CDECF9] min-h-screen flex items-center">
+      <div className="container mx-auto px-8 py-14 grid lg:grid-cols-2 gap-10 items-start w-full">
         <div className="relative">
           <span className="absolute -left-4 top-8 h-12 w-12 rounded-full bg-[#A8E6A3] blur-sm opacity-70" />
-          <h3 className="text-5xl sm:text-6xl font-extrabold text-[#0e2a47] leading-tight">
+          <h3 className="text-5xl sm:text-7xl font-extrabold text-[#0e2a47] leading-tight">
             Qual suas <span className="bg-[#A8E6A3] px-2 rounded-md">formas</span><br/> de conseguir ser<br/> alcançado?
           </h3>
         </div>

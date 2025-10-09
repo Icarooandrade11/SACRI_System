@@ -12,8 +12,8 @@ const QA = ({ title, text }) => (
 
 export default function FAQ() {
   return (
-    <section className="bg-[#CDECF9]">
-      <div className="container mx-auto px-6 py-12">
+    <section className="bg-[#CDECF9] min-h-full h-screen flex items-center">
+      <div className="container mx-auto px-6 py-12 w-full">
         <h3 className="text-5xl font-extrabold text-[#0e2a47] mb-8">Perguntas Frequentes</h3>
         <div className="grid md:grid-cols-3 gap-6">
           <QA title="Quanto tempo dura para ficar visível ao público?"

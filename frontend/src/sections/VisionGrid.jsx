@@ -10,8 +10,8 @@ export default function VisionGrid() {
   );
 
   return (
-    <section className="relative bg-[#A8E6A3]">
-      <div className="container mx-auto px-6 py-12">
+   <section className="relative bg-[#A8E6A3] min-h-full h-screen flex items-center">
+    <div className="container mx-auto px-6 py-12 w-full">
         <h2 className="text-white text-5xl sm:text-7xl font-extrabold mb-8">
           Visão <span className="text-white/95">geral</span> do nosso sistema
         </h2>

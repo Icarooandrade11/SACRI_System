@@ -21,8 +21,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-160px)] bg-gradient-to-br from-[#9BF6A3] to-[#7EE7A2] flex items-center justify-center px-4">
-      <div className="w-full max-w-5xl bg-white/95 rounded-[28px] shadow-lg grid md:grid-cols-2 overflow-hidden">
+    <div className="min-h-full h-screen bg-gradient-to-br from-[#9BF6A3] to-[#7EE7A2] flex items-center justify-center px-4">
+      <div className="w-full max-w-5xl  bg-white/95 rounded-[28px] shadow-lg grid md:grid-cols-2 overflow-hidden">
         {/* coluna esquerda */}
         <div className="p-8 sm:p-12">
           <div className="flex items-center justify-between mb-8">

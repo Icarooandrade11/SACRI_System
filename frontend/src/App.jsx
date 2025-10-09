@@ -1,21 +1,28 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar.jsx";
-import Footer from "./components/Footer.jsx";
-import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Comunidades from "./pages/Comunidades.jsx";
-import Plantacoes from "./pages/Plantacoes.jsx";
-import Relatorios from "./pages/Relatorios.jsx";
-import Suporte from "./pages/Suporte.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import { useLocation } from "react-router-dom";
+// src/App.jsx
+import { Routes, Route, useLocation } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+
+// Páginas base
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Comunidades from "./pages/Comunidades";
+import Search from "./pages/Search";
+
+// Páginas públicas
+import Negociantes from "./pages/public/Negociantes";
+import FamiliasPublico from "./pages/public/FamiliasPublico";
+import Regioes from "./pages/public/Regioes";
+import Acessos from "./pages/public/Acessos";
+import PlantacoesRurais from "./pages/public/PlantacoesRurais";
+import NovosNegocios from "./pages/public/NovosNegocios";
 
 
 export default function App() {
-    const location = useLocation();
-  const isHome = location.pathname === "/";
+  const isHome = useLocation().pathname === "/";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -25,55 +32,25 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registrar" element={<Register />} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+          {/* Público */}
+          <Route path="/negociantes" element={<Negociantes />} />
+          <Route path="/familias" element={<FamiliasPublico />} />
+          <Route path="/regioes" element={<Regioes />} />
+          <Route path="/acessos" element={<Acessos />} />
+          <Route path="/plantacoes-rurais" element={<PlantacoesRurais />} />
+          <Route path="/novos-negocios" element={<NovosNegocios />} />
 
-          <Route
-            path="/comunidades"
-            element={
-              <ProtectedRoute>
-                <Comunidades />
-              </ProtectedRoute>
-            }
-          />
+          {/* Gestão */}
+          <Route path="/comunidades" element={<Comunidades />} />
 
-          <Route
-            path="/plantacoes"
-            element={
-              <ProtectedRoute>
-                <Plantacoes />
-              </ProtectedRoute>
-            }
-          />
+          {/* Busca */}
+          <Route path="/buscar" element={<Search />} />
 
-          <Route
-            path="/relatorios"
-            element={
-              <ProtectedRoute>
-                <Relatorios />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/suporte"
-            element={
-              <ProtectedRoute>
-                <Suporte />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* Fallback */}
+          <Route path="*" element={<div className="p-8">Página não encontrada.</div>} />
         </Routes>
       </main>
-      <Footer />
+      {!isHome && <Footer />}
     </div>
   );
 }

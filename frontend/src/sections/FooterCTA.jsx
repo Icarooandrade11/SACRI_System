@@ -1,7 +1,9 @@
+
 export default function FooterCTA() {
   return (
-    <section className="relative overflow-hidden bg-[#A8E6A3]">
-      <div className="container mx-auto px-6 py-16 grid lg:grid-cols-2 gap-10 items-center">
+       <section className="relative overflow-hidden bg-[#A8E6A3] min-h-full flex items-center">
+      <div className="container mx-auto px-6 py-16 grid lg:grid-cols-2 gap-10 items-center w-full">
+        {/* ... */}
         <div className="relative">
           <div className="absolute -left-8 -top-8 w-64 h-36 rounded-2xl bg-[#2DB3C7] rotate-6 opacity-80" />
           <div className="absolute left-10 top-20 w-72 h-96 rounded-3xl bg-[#CFF6C6] -rotate-6 opacity-90" />

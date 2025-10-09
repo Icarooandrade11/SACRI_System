@@ -1,7 +1,7 @@
 export default function ThanksFeedback() {
   return (
-    <section className="bg-[#A8E6A3]">
-      <div className="container mx-auto px-6 py-12 grid lg:grid-cols-2 gap-8 items-start">
+     <section className="bg-[#A8E6A3] min-h-full h-screen flex items-center">
+      <div className="container mx-auto px-6 py-12 grid lg:grid-cols-2 gap-8 items-start w-full">
         <div>
           <h3 className="text-white text-5xl sm:text-6xl font-extrabold leading-tight">
             Obrigado por<br/> estar nos<br/> ajudando

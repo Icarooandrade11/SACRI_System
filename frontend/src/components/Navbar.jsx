@@ -1,32 +1,43 @@
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { Link, useLocation } from "react-router-dom";
 
-export default function Navbar() {
-  const auth = useAuth();                    // pode ser null antes do provider
-  const { user, logout } = auth || {};       // destructuring seguro
-  const navigate = useNavigate();
+export default function Navbar({ variant }) {
+  const { pathname } = useLocation();
+  const isHome = variant === "home" || pathname === "/";
 
+  if (isHome) {
+    // Barra minimalista, transparente, no topo da HOME
+    return (
+      <header className="absolute inset-x-0 top-6 z-30">
+        <div className="mx-auto max-w-7xl px-6 flex items-center gap-6">
+          {/* logo simples */}
+          <Link to="/" className="flex items-center gap-2 text-white/90 font-extrabold tracking-wider">
+            <svg width="28" height="28" viewBox="0 0 24 24" className="opacity-90">
+              <path d="M3 12l6-6l6 6l-6 6z" fill="currentColor" />
+            </svg>
+          </Link>
+
+          <nav className="flex items-center gap-4 sm:gap-6 text-white/90 font-semibold text-lg">
+            <Link to="/login" className="hover:text-white">LOGIN</Link>
+            <span className="opacity-70">|</span>
+            <Link to="/registrar" className="hover:text-white">CADASTRO</Link>
+            <span className="opacity-70">|</span>
+            <Link to="/familias" className="hover:text-white">FAMÍLIAS</Link>
+          </nav>
+        </div>
+      </header>
+    );
+  }
+
+  // Navbar padrão para o restante do site
   return (
-    <header className="w-full bg-[#A8E6A3]">
-      <div className="container mx-auto px-4 py-3 text-sm font-semibold tracking-wide flex items-center gap-4">
-        <nav className="flex items-center gap-4">
-          <button onClick={() => navigate("/")} className="link link-hover text-neutral-900">HOME</button>
-          <span className="opacity-60">|</span>
-          {!user ? (
-            <>
-              <button onClick={() => navigate("/login")} className="link link-hover text-neutral-900">LOGIN</button>
-              <span className="opacity-60">|</span>
-              <button onClick={() => navigate("/registrar")} className="link link-hover text-neutral-900">CADASTRO</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => navigate("/comunidades")} className="link link-hover text-neutral-900">DASHBOARD</button>
-              <span className="opacity-60">|</span>
-              <button onClick={logout} className="link link-hover text-neutral-900">SAIR</button>
-            </>
-          )}
-          <span className="opacity-60">|</span>
-          <Link to="/familias" className="link link-hover text-neutral-900">FAMÍLIAS</Link>
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b">
+      <div className="mx-auto max-w-7xl px-6 h-14 flex items-center justify-between">
+        <Link to="/" className="font-extrabold text-emerald-600">SACRI</Link>
+        <nav className="flex items-center gap-6 text-sm">
+          <Link to="/">Home</Link>
+          <Link to="/comunidades">Comunidades</Link>
+          <Link to="/familias">Famílias</Link>
+          <Link to="/login" className="btn btn-sm">Entrar</Link>
         </nav>
       </div>
     </header>

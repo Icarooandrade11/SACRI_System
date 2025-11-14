@@ -1,27 +1,52 @@
-import { useEffect, useState } from "react";
-import api from "../../api/api";
-
 export default function PlantacoesRurais() {
-  const [items, setItems] = useState([]);
-  const [q, setQ] = useState("");
-
-  useEffect(()=>{ api.get("/crops").then(({data})=>setItems(data||[])).catch(()=>setItems([])); },[]);
-  const filtered = items.filter(p => [p.name,p.type,p.region,p.family,p.notes].filter(Boolean).join(" ").toLowerCase().includes(q.toLowerCase()));
+  const destaquesPE = [
+    {
+      cultura: "Uva (mesa e vinificação)",
+      polo: "Petrolina/PE – Vale do São Francisco",
+      obs: "Exportação forte; parceria com Juazeiro/BA.",
+    },
+    {
+      cultura: "Manga",
+      polo: "Petrolina/PE – Vale do São Francisco",
+      obs: "Referência nacional em produtividade e qualidade.",
+    },
+    {
+      cultura: "Cana-de-açúcar",
+      polo: "Mata Norte",
+      obs: "Tradição histórica; base para açúcar e etanol.",
+    },
+    {
+      cultura: "Banana",
+      polo: "Zona da Mata Sul",
+      obs: "Boa oferta anual; abastece feiras e centrais.",
+    },
+  ];
 
   return (
-    <div className="container mx-auto px-6 py-10">
-      <h1 className="text-5xl sm:text-6xl font-extrabold mb-6">Plantações Rurais</h1>
-      <input className="input input-bordered w-full max-w-lg mb-6" placeholder="Buscar plantações..." value={q} onChange={e=>setQ(e.target.value)} />
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(p=>(
-          <div key={p._id} className="bg-base-100 rounded-2xl p-5 shadow border">
-            <h4 className="text-lg font-semibold">{p.name}</h4>
-            <p className="text-sm opacity-80">{p.type || "-"}</p>
-            <p className="text-sm"><b>Região:</b> {p.region || "-"}</p>
-            {p.notes && <p className="text-sm mt-2">{p.notes}</p>}
-          </div>
-        ))}
+    <main className="min-h-screen bg-[#E8FFF0]">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-emerald-800">
+          Plantações Rurais — Destaques de Pernambuco
+        </h1>
+
+        <p className="mt-3 text-emerald-900/80">
+          Panorama ilustrativo de polos e culturas relevantes do estado.
+        </p>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {destaquesPE.map((it, i) => (
+            <div key={i} className="rounded-2xl bg-white p-5 shadow">
+              <div className="text-xs font-bold tracking-widest text-black/60">CULTURA</div>
+              <h2 className="text-xl font-bold mt-0.5">{it.cultura}</h2>
+              <div className="mt-2 text-sm">
+                <div className="font-semibold text-black/70">Polo:</div>
+                <div>{it.polo}</div>
+              </div>
+              <p className="mt-2 text-black/75">{it.obs}</p>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

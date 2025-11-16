@@ -93,14 +93,33 @@ Project_SACRI/
 
 4) Variáveis de Ambiente
 4.1 Backend (backend/.env)
-NODE_ENV=development
+
+Copie `backend/.env.example` e configure pelo menos uma das opções abaixo:
+
+**Opção A – URI completa do MongoDB (recomendado pelo Atlas)**
+
+```
+MONGO_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+
+**Opção B – Credenciais separadas** (o backend monta a URI, útil quando há caracteres especiais na senha)
+
+```
+MONGO_USER=<usuario_do_mongo>
+MONGO_PASSWORD=<senha_do_mongo>
+MONGO_HOST=cluster0.xxxxxx.mongodb.net
+MONGO_DB=sacri
+MONGO_OPTIONS=retryWrites=true&w=majority&appName=Cluster0
+```
+
+Outras variáveis importantes:
+
+```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/sacri
 JWT_SECRET=um-segredo-forte-aqui
-CORS_ORIGIN=http://localhost:5173
-
-
-Copie de .env.example e ajuste MONGODB_URI/JWT_SECRET.
+MAIL_FROM=no-reply@sacri.local
+FRONTEND_URL=http://localhost:5173
+```
 
 4.2 Frontend (frontend/.env)
 VITE_API_URL=http://localhost:5000/api

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, mockLoginParceiro } from "../context/AuthContext";
+import api from "../api/api";
+import { ROLES } from "../rbac/roles";
 
 function Field({ icon, ...props }) {
   return (
@@ -17,17 +19,23 @@ function LoginForm({ onMock }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [f, setF] = useState({ email: "", password: "" });
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      // aqui você faria o request real e trataria o papel retornado
-      login({ id: "u-001", name: "Usuário", role: "PARTICIPANTE", token: "dev" });
+    setError("");
+    try {
+      const { data } = await api.post("/auth/login", f);
+      login(data);
+      if (data.role === ROLES.MORADOR) navigate("/", { replace: true });
+      else navigate("/fornecedor", { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "Não foi possível entrar");
+    } finally {
       setLoading(false);
-      navigate("/", { replace: true }); // participante → home
-    }, 600);
+    }
   }
 
   return (
@@ -53,12 +61,19 @@ function LoginForm({ onMock }) {
         {loading ? "Entrando..." : "Log in"}
       </button>
 
+      {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+
       <button type="button" onClick={onMock} className="btn btn-sm">
         Entrar como PARCEIRO (mock)
       </button>
 
-      <div className="text-sm">
-        ou <Link className="link link-primary" to="/registrar">criar conta</Link>
+      <div className="text-sm space-y-1 text-center">
+        <div>
+          ou <Link className="link link-primary" to="/registrar">criar conta</Link>
+        </div>
+        <Link className="link" to="/recuperar-senha">
+          Esqueceu sua senha?
+        </Link>
       </div>
     </form>
   );
@@ -67,15 +82,24 @@ function LoginForm({ onMock }) {
 function SignupForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [f, setF] = useState({ name: "", email: "", role: "PARTICIPANTE", password: "" });
+  const [f, setF] = useState({ name: "", email: "", role: ROLES.MORADOR, password: "", phone: "", organization: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // cadastro ok → salva usuário com papel escolhido
-    login({ id: "u-002", name: f.name || "Novo usuário", role: f.role, token: "dev" });
-    // redireciona por papel
-    if (f.role === "PARCEIRO") navigate("/fornecedor", { replace: true });
-    else navigate("/", { replace: true });
+    setError("");
+    setLoading(true);
+    try {
+      const { data } = await api.post("/auth/register", f);
+      login(data);
+      if (data.role === ROLES.MORADOR) navigate("/", { replace: true });
+      else navigate("/fornecedor", { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || "Não foi possível cadastrar");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -109,14 +133,36 @@ function SignupForm() {
           value={f.role}
           onChange={(e) => setF((x) => ({ ...x, role: e.target.value }))}
         >
-          <option value="PARTICIPANTE">Participante / Morador</option>
-          <option value="AGENTE">Agente Comunitário</option>
-          <option value="GESTOR">Gestor/ONG</option>
-          <option value="PARCEIRO">Parceiro/Fornecedor</option>
+          <option value={ROLES.MORADOR}>Participante / Morador</option>
+          <option value={ROLES.AGENTE}>Agente Comunitário</option>
+          <option value={ROLES.GESTOR}>Gestor/ONG</option>
+          <option value={ROLES.PARCEIRO}>Parceiro/Fornecedor</option>
         </select>
       </div>
+      <p className="text-xs text-emerald-700">
+        Participantes/moradores acessam apenas o site público. Para usar o sistema de gestão selecione um perfil de agente,
+        gestor ou parceiro.
+      </p>
 
-      <button className="btn btn-success rounded-full w-full">Create Account</button>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <input
+          className="input input-bordered rounded-full"
+          placeholder="Telefone para contato"
+          value={f.phone}
+          onChange={(e) => setF((x) => ({ ...x, phone: e.target.value }))}
+        />
+        <input
+          className="input input-bordered rounded-full"
+          placeholder="Organização"
+          value={f.organization}
+          onChange={(e) => setF((x) => ({ ...x, organization: e.target.value }))}
+        />
+      </div>
+
+      <button className={`btn btn-success rounded-full w-full ${loading && "loading"}`} disabled={loading}>
+        {loading ? "Enviando..." : "Create Account"}
+      </button>
+      {error && <p className="text-sm text-red-600 text-center">{error}</p>}
       <div className="text-sm">
         ou <Link className="link link-primary" to="/login">Log in</Link>
       </div>

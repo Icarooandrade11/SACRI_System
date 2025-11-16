@@ -7,6 +7,7 @@ import Footer from "./components/Footer.jsx";
 
 import Home from "./pages/Home.jsx";
 import Auth from "./pages/Auth";
+import PasswordRecovery from "./pages/PasswordRecovery.jsx";
 import Comunidades from "./pages/Comunidades.jsx";
 import Search from "./pages/Search.jsx";
 
@@ -24,7 +25,7 @@ import Necessidades from "./features/fornecedor/pages/Necessidades.jsx";
 import Solicitacoes from "./features/fornecedor/pages/Solicitacoes.jsx";
 import StatusSolicitacoes from "./features/fornecedor/pages/StatusSolicitacoes.jsx";
 import PainelGestao from "./features/fornecedor/pages/PainelGestao.jsx";
-import OrgaosApd from "./features/fornecedor/pages/OrgaosApd.jsx";
+import OrgaosApd from "./features/fornecedor/pages/OrgaosAPD.jsx";
 import PerfilFornecedor from "./features/fornecedor/pages/Perfil.jsx"; // NOVO
 
 function ProtectedByRole({ allow, children }) {
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/login" element={<Auth />} />
           <Route path="/registrar" element={<Auth />} />
 
+          <Route path="/recuperar-senha" element={<PasswordRecovery />} />
           <Route path="/negociantes" element={<Negociantes />} />
           <Route path="/familias" element={<FamiliasPublico />} />
           <Route path="/regioes" element={<Regioes />} />
@@ -62,7 +64,7 @@ export default function App() {
           <Route
             path="/fornecedor"
             element={
-              <ProtectedByRole allow={[ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ADMIN]}>
+              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ADMIN]}>
                 <FornecedorLayout />
               </ProtectedByRole>
             }

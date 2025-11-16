@@ -1,13 +1,23 @@
-
 import Community from "../models/Community.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const getCommunities = async (req, res) => {
-  const communities = await Community.find();
-  res.json(communities);
-};
+export const getCommunities = asyncHandler(async (req, res) => {
+  const communities = await Community.find().sort({ createdAt: -1 });
+  return res.json(communities);
+});
 
-export const createCommunity = async (req, res) => {
+export const createCommunity = asyncHandler(async (req, res) => {
   const { name, region, families, contact, description } = req.body;
-  const community = await Community.create({ name, region, families, contact, description, createdBy: req.user._id });
-  res.status(201).json(community);
-};
+  if (!name) return res.status(400).json({ message: "Nome é obrigatório" });
+
+  const community = await Community.create({
+    name,
+    region,
+    families,
+    contact,
+    description,
+    createdBy: req.user._id,
+  });
+
+  return res.status(201).json(community);
+});

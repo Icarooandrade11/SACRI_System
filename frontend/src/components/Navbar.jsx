@@ -44,7 +44,7 @@ export default function Navbar({ variant }) {
               <path d="M3 12l6-6l6 6l-6 6z" fill="currentColor" />
             </svg>
           </Link>
-          <nav className="flex items-center gap-4 sm:gap-6 text-white/90 font-semibold text-lg">
+          <nav className="flex flex-1 ap-4 sm:gap-6 text-white/90 font-semibold text-lg">
             <Link to="/familias" className="hover:text-white">
               FAMÍLIAS
             </Link>

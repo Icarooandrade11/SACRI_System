@@ -46,6 +46,7 @@ export default function App() {
   const notificationsAllowed = [ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
   const canSeeContacts = contactsAllowed.includes(userRole);
   const canSeeNotifications = notificationsAllowed.includes(userRole);
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -98,6 +99,14 @@ export default function App() {
           {canSeeNotifications && <ChatWidget />}
         </>
       )}
+      {isAdmin && (
+        <>
+          <CommunicationPanel />
+          <ChatWidget />
+        </>
+      )}
+      <CommunicationPanel />
+      <ChatWidget />
 
       <Footer />
     </div>

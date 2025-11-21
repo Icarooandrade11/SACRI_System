@@ -21,6 +21,9 @@ export default function Home() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const { user } = useAuth();
+  const userRole = user?.role;
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
+  const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
   const isAdmin = user?.role === ROLES.ADMIN;
 
   function handleSearch(e) {
@@ -143,6 +146,7 @@ export default function Home() {
       <SectionWrap delay={0.05}><AccessQuestions /></SectionWrap>
       <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
       <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
+      {canSeeAdminFeedback && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
       {isAdmin && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
       <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>
       <SectionWrap><FAQ /></SectionWrap>

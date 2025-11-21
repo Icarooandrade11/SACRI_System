@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext.jsx";
+import { ROLES } from "../context/AuthContext.jsx";
 
 // --- Seções (conforme seu projeto)
 import VisionGrid from "../sections/VisionGrid";
@@ -18,6 +20,8 @@ import AdminFeedback from "../sections/AdminFeedback";
 export default function Home() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const { user } = useAuth();
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   function handleSearch(e) {
     e.preventDefault();
@@ -139,6 +143,7 @@ export default function Home() {
       <SectionWrap delay={0.05}><AccessQuestions /></SectionWrap>
       <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
       <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
+      {isAdmin && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
       <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>
       <SectionWrap><FAQ /></SectionWrap>
       <SectionWrap><ThanksFeedback /></SectionWrap>

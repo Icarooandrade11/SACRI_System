@@ -38,8 +38,10 @@ function ProtectedByRole({ allow, children }) {
 }
 
 export default function App() {
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -86,6 +88,12 @@ export default function App() {
         </Routes>
       </main>
 
+      {isAdmin && (
+        <>
+          <CommunicationPanel />
+          <ChatWidget />
+        </>
+      )}
       <CommunicationPanel />
       <ChatWidget />
 

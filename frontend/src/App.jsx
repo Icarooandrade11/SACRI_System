@@ -94,6 +94,8 @@ export default function App() {
           <ChatWidget />
         </>
       )}
+      <CommunicationPanel />
+      <ChatWidget />
 
       <Footer />
     </div>

@@ -144,6 +144,7 @@ export default function Home() {
       <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
       <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
       {isAdmin && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
+      <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>
       <SectionWrap><FAQ /></SectionWrap>
       <SectionWrap><ThanksFeedback /></SectionWrap>
       <SectionWrap><ExperiencePoll /></SectionWrap>

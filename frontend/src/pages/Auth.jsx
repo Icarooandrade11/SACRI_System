@@ -27,7 +27,7 @@ function LoginForm({ onMock }) {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/auth/login", f);
+      const { data } = await api.post("auth/login", f);
       login(data);
       if (data.role === ROLES.MORADOR) navigate("/", { replace: true });
       else navigate("/fornecedor", { replace: true });
@@ -142,6 +142,13 @@ function SignupForm() {
       <p className="text-xs text-emerald-700">
         Participantes/moradores acessam apenas o site público. Para usar o sistema de gestão selecione um perfil de agente,
         gestor ou parceiro.
+      </p>
+      <p>
+
+      </p>
+      <p className="text-xs text-emerald-700">
+
+        OBS: Após escolher como Parceiro ou Gestor, aguardar aprovação do ADMIN!
       </p>
 
       <div className="grid sm:grid-cols-2 gap-4">

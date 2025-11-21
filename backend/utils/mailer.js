@@ -1,48 +1,99 @@
-const buildPayload = ({ to, subject, html }) => ({
-  to,
-  subject,
-  html,
-  from: process.env.MAIL_FROM || "no-reply@sacri.local",
-});
 
-export const sendMail = async ({ to, subject, html }) => {
-  const payload = buildPayload({ to, subject, html });
-  const webhook = process.env.MAIL_WEBHOOK_URL;
+import nodemailer from 'nodemailer';
 
-  if (webhook) {
-    const headers = { "Content-Type": "application/json" };
-    if (process.env.MAIL_WEBHOOK_TOKEN) {
-      headers.Authorization = `Bearer ${process.env.MAIL_WEBHOOK_TOKEN}`;
-    }
+const {
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  MAIL_FROM, // ex: "seu_sistema <sistema_escolhido@gmail.com>"
+} = process.env;
 
-    const response = await fetch(webhook, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-    });
+const fromAddress = MAIL_FROM || (SMTP_USER ? `SACRI <${SMTP_USER}>` : null);
 
-    if (!response.ok) {
-      throw new Error(`Falha ao enviar e-mail (status ${response.status})`);
-    }
+let transporter = null;
+let transportReady = false;
+let transportError = null;
 
-    return { delivered: true };
+async function buildTransporter() {
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !fromAddress) {
+    transportError = `[mailer] Variáveis ausentes: ${
+      [
+        !SMTP_HOST && 'SMTP_HOST',
+        !SMTP_PORT && 'SMTP_PORT',
+        !SMTP_USER && 'SMTP_USER',
+        !SMTP_PASS && 'SMTP_PASS',
+        !fromAddress && 'MAIL_FROM/SMTP_USER',
+      ]
+        .filter(Boolean)
+        .join(', ')
+    }`;
+    console.warn(transportError);
+    return null;
   }
 
-  console.info("📧 [MAIL MOCK]", { to: payload.to, subject: payload.subject });
-  console.info(html);
-  return { delivered: false, mocked: true };
-};
+  const t = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT),
+    secure: Number(SMTP_PORT) === 465, // 465 = TLS
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
 
-export const sendPasswordRecoveryEmail = async ({ to, name, link }) => {
+  try {
+    await t.verify();
+    console.log('[mailer] SMTP pronto (verify OK).');
+    transportReady = true;
+    return t;
+  } catch (err) {
+    transportError = `[mailer] verify falhou: ${err?.message || err}`;
+    console.warn(transportError);
+    return null;
+  }
+}
+
+// inicializa de forma preguiçosa (útil se dotenv não carregou a tempo)
+async function getTransporter() {
+  if (transporter || transportReady || transportError) return transporter;
+  transporter = await buildTransporter();
+  return transporter;
+}
+
+export async function sendPasswordRecoveryEmail({ to, name, link }) {
   const html = `
-    <div style="font-family: Arial, sans-serif;">
-      <h2>Recuperação de senha - SACRI</h2>
-      <p>Olá ${name || ""}, recebemos uma solicitação para redefinir a sua senha.</p>
-      <p><a href="${link}" style="padding: 12px 18px; background: #16a34a; color: #fff; text-decoration: none; border-radius: 6px;">Definir nova senha</a></p>
-      <p>Ou copie e cole este link no navegador: ${link}</p>
-      <p>Se você não fez esta solicitação, ignore este e-mail.</p>
+    <div style="font-family:Arial,sans-serif">
+      <h2>Recuperação de senha</h2>
+      <p>Olá, ${name || ''}!</p>
+      <p>Clique no botão abaixo para redefinir sua senha:</p>
+      <p><a href="${link}" style="background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Redefinir senha</a></p>
+      <p>Se você não solicitou, ignore este e-mail.</p>
+      <hr/>
+      <small>O link expira em 1 hora.</small>
     </div>
   `;
 
-  return sendMail({ to, subject: "SACRI • Recuperação de senha", html });
-};
+  const t = await getTransporter();
+
+  if (!t) {
+    // Sem SMTP válido: **mock** explícito com razão
+    console.info('📧 [MAIL MOCK - sem SMTP válido]', {
+      reason: transportError || 'Variáveis incompletas',
+      to,
+      subject: 'SACRI — Recuperação de senha',
+    });
+    console.info(html);
+    return { delivered: false, mocked: true, reason: transportError || 'missing-env' };
+  }
+
+  const info = await t.sendMail({
+    from: fromAddress,
+    to,
+    subject: 'SACRI — Recuperação de senha',
+    html,
+  });
+
+  console.log('[mailer] Enviado:', info.messageId, info.response);
+  if (info.rejected?.length) {
+    throw new Error('E-mail rejeitado: ' + info.rejected.join(', '));
+  }
+  return { delivered: true, id: info.messageId };
+}

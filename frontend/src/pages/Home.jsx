@@ -24,6 +24,9 @@ export default function Home() {
   const userRole = user?.role;
   const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
   const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
+  const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   function handleSearch(e) {
     e.preventDefault();
@@ -146,6 +149,8 @@ export default function Home() {
       <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
       <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
       {canSeeAdminFeedback && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
+      {isAdmin && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
+      <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>
       <SectionWrap><FAQ /></SectionWrap>
       <SectionWrap><ThanksFeedback /></SectionWrap>
       <SectionWrap><ExperiencePoll /></SectionWrap>

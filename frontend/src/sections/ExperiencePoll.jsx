@@ -1,7 +1,7 @@
 export default function ExperiencePoll() {
   return (
-      <section className="bg-[#A8E6A3] min-h-full h-screen flex items-center">
-      <div className="container mx-auto px-6 py-12 grid lg:grid-cols-2 gap-8 items-center w-full">
+    <section className="bg-[#A8E6A3] rounded-3xl shadow-inner border border-black/5">
+      <div className="container mx-auto px-6 py-14 grid lg:grid-cols-2 gap-8 items-center w-full">
         <div className="relative">
           <div className="bg-[#CFF6C6] rounded-3xl h-64 sm:h-80 w-full" />
           <div className="absolute inset-0 flex items-end p-4">

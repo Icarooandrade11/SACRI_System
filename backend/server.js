@@ -11,6 +11,7 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 import needRoutes from "./routes/needRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/needs", needRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(errorHandler);
 

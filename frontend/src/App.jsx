@@ -27,6 +27,8 @@ import StatusSolicitacoes from "./features/fornecedor/pages/StatusSolicitacoes.j
 import PainelGestao from "./features/fornecedor/pages/PainelGestao.jsx";
 import OrgaosApd from "./features/fornecedor/pages/OrgaosAPD.jsx";
 import PerfilFornecedor from "./features/fornecedor/pages/Perfil.jsx"; // NOVO
+import CommunicationPanel from "./components/CommunicationPanel.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
 
 function ProtectedByRole({ allow, children }) {
   const { user } = useAuth();
@@ -83,6 +85,9 @@ export default function App() {
           <Route path="*" element={<div className="p-8">404 — Página não encontrada.</div>} />
         </Routes>
       </main>
+
+      <CommunicationPanel />
+      <ChatWidget />
 
       <Footer />
     </div>

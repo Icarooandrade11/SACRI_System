@@ -27,6 +27,8 @@ import StatusSolicitacoes from "./features/fornecedor/pages/StatusSolicitacoes.j
 import PainelGestao from "./features/fornecedor/pages/PainelGestao.jsx";
 import OrgaosApd from "./features/fornecedor/pages/OrgaosAPD.jsx";
 import PerfilFornecedor from "./features/fornecedor/pages/Perfil.jsx"; // NOVO
+import CommunicationPanel from "./components/CommunicationPanel.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
 
 function ProtectedByRole({ allow, children }) {
   const { user } = useAuth();
@@ -36,8 +38,14 @@ function ProtectedByRole({ allow, children }) {
 }
 
 export default function App() {
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
+  const userRole = user?.role;
+  const contactsAllowed = [ROLES.AGENTE, ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const canSeeContacts = contactsAllowed.includes(userRole);
+  const canSeeNotifications = notificationsAllowed.includes(userRole);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -64,7 +72,7 @@ export default function App() {
           <Route
             path="/fornecedor"
             element={
-              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ADMIN]}>
+              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ONG, ROLES.ADMIN]}>
                 <FornecedorLayout />
               </ProtectedByRole>
             }
@@ -83,6 +91,13 @@ export default function App() {
           <Route path="*" element={<div className="p-8">404 — Página não encontrada.</div>} />
         </Routes>
       </main>
+
+      {(canSeeContacts || canSeeNotifications) && (
+        <>
+          {canSeeContacts && <CommunicationPanel />}
+          {canSeeNotifications && <ChatWidget />}
+        </>
+      )}
 
       <Footer />
     </div>

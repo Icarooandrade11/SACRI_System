@@ -135,7 +135,8 @@ function SignupForm() {
         >
           <option value={ROLES.MORADOR}>Participante / Morador</option>
           <option value={ROLES.AGENTE}>Agente Comunitário</option>
-          <option value={ROLES.GESTOR}>Gestor/ONG</option>
+          <option value={ROLES.GESTOR}>Gestor</option>
+          <option value={ROLES.ONG}>ONG</option>
           <option value={ROLES.PARCEIRO}>Parceiro/Fornecedor</option>
         </select>
       </div>

@@ -42,6 +42,10 @@ export default function App() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const userRole = user?.role;
+  const contactsAllowed = [ROLES.AGENTE, ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const canSeeContacts = contactsAllowed.includes(userRole);
+  const canSeeNotifications = notificationsAllowed.includes(userRole);
   const contactsAllowed = [ROLES.AGENTE, ROLES.GESTOR, ROLES.PARCEIRO];
   const notificationsAllowed = [ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
   const canSeeContacts = contactsAllowed.includes(userRole);
@@ -73,7 +77,7 @@ export default function App() {
           <Route
             path="/fornecedor"
             element={
-              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ADMIN]}>
+              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ONG, ROLES.ADMIN]}>
                 <FornecedorLayout />
               </ProtectedByRole>
             }
@@ -99,6 +103,7 @@ export default function App() {
           {canSeeNotifications && <ChatWidget />}
         </>
       )}
+
       {isAdmin && (
         <>
           <CommunicationPanel />

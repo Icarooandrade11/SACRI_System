@@ -22,6 +22,8 @@ export default function Home() {
   const [q, setQ] = useState("");
   const { user } = useAuth();
   const userRole = user?.role;
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
   const notificationsAllowed = [ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
   const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
   const isAdmin = user?.role === ROLES.ADMIN;

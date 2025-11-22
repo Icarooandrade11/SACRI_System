@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext.jsx";
+import { ROLES } from "../context/AuthContext.jsx";
 
 // --- Seções (conforme seu projeto)
 import VisionGrid from "../sections/VisionGrid";
@@ -12,10 +14,16 @@ import ThanksFeedback from "../sections/ThanksFeedback";
 import ExperiencePoll from "../sections/ExperiencePoll";
 import MotivationPoll from "../sections/MotivationPoll";
 import FooterCTA from "../sections/FooterCTA";
+import RoleAccess from "../sections/RoleAccess";
+import AdminFeedback from "../sections/AdminFeedback";
 
 export default function Home() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const { user } = useAuth();
+  const userRole = user?.role;
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
 
   function handleSearch(e) {
     e.preventDefault();
@@ -29,11 +37,16 @@ export default function Home() {
   };
 
   // Wrapper para padronizar cada seção de conteúdo
-  const SectionWrap = ({ children }) => (
-  // transparente: herda o fundo do <main>
-  <section className="bg-transparent">
-    <div className="mx-auto max-w-7xl px-6 py-16">{children}</div>
-  </section>
+  const SectionWrap = ({ children, delay = 0 }) => (
+    <motion.section
+      className="bg-transparent"
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.7, ease: "easeOut", delay }}
+    >
+      <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16">{children}</div>
+    </motion.section>
   );
 
   return (
@@ -43,17 +56,17 @@ export default function Home() {
         {/* SHAPES – fundo direito (flutuam de leve) */}
         <motion.div
           {...float}
-          className="pointer-events-none absolute right-20 top-6 w-[240px] h-[520px] rounded-[36px] bg-[#CDECF9] opacity-80 rotate-[10deg]"
+          className="pointer-events-none absolute right-20 top-6 w-[240px] h-[520px] rounded-[36px] bg-[#CDECF9] opacity-80 rotate-[10deg] -z-10"
         />
         <motion.div
           {...float}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute right-8 top-10 w-[620px] h-[900px] rounded-[42px] bg-[#CFF6C6] opacity-90 rotate-[15deg]"
+          className="pointer-events-none absolute right-8 top-10 w-[620px] h-[900px] rounded-[42px] bg-[#CFF6C6] opacity-70 rotate-[15deg] -z-10"
         />
         <motion.div
           {...float}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute -right-12 bottom-[-40px] w-[360px] h-[360px] rotate-[22deg]"
+          className="pointer-events-none absolute -right-12 bottom-[-40px] w-[360px] h-[360px] rotate-[22deg] -z-10"
         >
           <svg viewBox="0 0 200 200" className="w-full h-full">
             <path
@@ -62,6 +75,17 @@ export default function Home() {
             />
           </svg>
         </motion.div>
+
+        <motion.svg
+          {...float}
+          viewBox="0 0 1440 320"
+          className="pointer-events-none absolute inset-x-0 bottom-0 w-full opacity-70 -z-10"
+        >
+          <path
+            fill="#9ddf95"
+            d="M0,96L80,96C160,96,320,96,480,101.3C640,107,800,117,960,133.3C1120,149,1280,171,1360,181.3L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
+          />
+        </motion.svg>
 
         {/* CONTEÚDO */}
         <div className="mx-auto max-w-7xl px-6 pt-28 pb-24 relative z-10">
@@ -118,13 +142,15 @@ export default function Home() {
 
       {/* --- SEÇÕES DO SCROLL (conforme seus prints) --- */}
       <SectionWrap><VisionGrid /></SectionWrap>
-      <SectionWrap><AccessQuestions /></SectionWrap>
-      <SectionWrap><ResourcesGrid /></SectionWrap>
+      <SectionWrap delay={0.05}><AccessQuestions /></SectionWrap>
+      <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
+      <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
+      {canSeeAdminFeedback && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
       <SectionWrap><FAQ /></SectionWrap>
       <SectionWrap><ThanksFeedback /></SectionWrap>
       <SectionWrap><ExperiencePoll /></SectionWrap>
       <SectionWrap><MotivationPoll /></SectionWrap>
       <SectionWrap><FooterCTA /></SectionWrap>
-    </> 
+    </>
   );
 }

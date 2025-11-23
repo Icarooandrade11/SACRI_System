@@ -1,94 +1,192 @@
 import express from "express";
+import Contact from "../models/Contact.js";
+import ContactRequest from "../models/ContactRequest.js";
+import User from "../models/User.js";
+import protect from "../middleware/authMiddleware.js";
+import { ROLES } from "../utils/roles.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const router = express.Router();
+const ELIGIBLE_ROLES = [ROLES.AGENTE, ROLES.GESTOR, ROLES.ONG];
 
-// Dados em memória para simulação
-const prospects = [
-  { id: "u-101", name: "Maria Gomes", role: "Agente comunitária", relationship: "amigo", status: "online" },
-  { id: "u-102", name: "João Lima", role: "Gestor municipal", relationship: "orgao", status: "ausente" },
-  { id: "u-103", name: "Associação Verde", role: "Parceiro/Fornecedor", relationship: "parceiro", status: "online" },
-  { id: "u-104", name: "Rede de Jovens", role: "ONG", relationship: "outros", status: "online" },
-];
+function normalizeContact(doc) {
+  if (!doc) return null;
+  return {
+    id: doc.id,
+    userId: doc.target._id.toString(),
+    name: doc.target.name,
+    role: doc.target.role,
+    relationship: doc.relationship,
+    status: doc.target.online ? "online" : "offline",
+    };
+}
 
-const contacts = [
-  { id: "c-1", userId: "u-103", name: "Associação Verde", role: "Parceiro/Fornecedor", relationship: "parceiro", status: "online" },
-];
+router.use(protect);
 
-const requests = [
-  {
-    id: "rq-1",
-    fromUser: { id: "u-104", name: "Rede de Jovens", role: "ONG" },
-    toUserId: "current",
-    relationship: "amigo",
-    direction: "incoming",
-    status: "pendente",
-    note: "Gostaríamos de colaborar em novas hortas comunitárias.",
-  },
-];
+router.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const [contacts, requests] = await Promise.all([
+      Contact.find({ owner: req.user._id }).populate("target", "name role online"),
+      ContactRequest.find({
+        status: "pendente",
+        $or: [{ from: req.user._id }, { to: req.user._id }],
+      })
+        .populate("from", "name role")
+        .populate("to", "name role"),
+    ]);
 
-router.get("/", (req, res) => {
-  res.json({ contacts, requests });
-});
+    const formattedContacts = contacts.map(normalizeContact);
+    const formattedRequests = requests.map((reqItem) => ({
+      id: reqItem.id,
+      relationship: reqItem.relationship,
+      note: reqItem.note,
+      status: reqItem.status,
+      direction: reqItem.to._id.equals(req.user._id) ? "incoming" : "outgoing",
+      fromUser: {
+        id: reqItem.from.id,
+        name: reqItem.from.name,
+        role: reqItem.from.role,
+      },
+      target: {
+        id: reqItem.to.id,
+        name: reqItem.to.name,
+        role: reqItem.to.role,
+      },
+    }));
 
-router.get("/targets", (req, res) => {
-  const available = prospects.filter(
-    (p) => !contacts.some((c) => c.userId === p.id) && !requests.some((r) => r.fromUser?.id === p.id)
-  );
-  res.json({ targets: available });
-});
+    res.json({ contacts: formattedContacts, requests: formattedRequests });
+  })
+);
 
-router.post("/requests", (req, res) => {
-  const { targetId, relationship = "amigo", note = "" } = req.body || {};
-  const target = prospects.find((p) => p.id === targetId);
-  if (!target) return res.status(400).json({ message: "Contato não encontrado" });
+router.get(
+  "/targets",
+  asyncHandler(async (req, res) => {
+    const search = (req.query.search || "").trim();
+    const regex = search ? new RegExp(`^${search}`, "i") : null;
 
-  const request = {
-    id: `rq-${Date.now()}`,
-    fromUser: { id: "current", name: "Você", role: "Sistema" },
-    toUserId: target.id,
-    target,
-    relationship,
-    direction: "outgoing",
-    status: "pendente",
-    note,
-  };
-  requests.push(request);
-  res.status(201).json(request);
-});
+    const [contacts, requests] = await Promise.all([
+      Contact.find({ owner: req.user._id }).select("target"),
+      ContactRequest.find({ status: "pendente", from: req.user._id }).select("to"),
+    ]);
 
-router.patch("/requests/:id/accept", (req, res) => {
-  const { id } = req.params;
-  const index = requests.findIndex((r) => r.id === id && r.direction === "incoming");
-  if (index === -1) return res.status(404).json({ message: "Solicitação não encontrada" });
+    const excludedIds = new Set([
+      ...contacts.map((c) => c.target.toString()),
+      ...requests.map((r) => r.to.toString()),
+      req.user._id.toString(),
+    ]);
 
-  const request = requests.splice(index, 1)[0];
-  const contact = {
-    id: `c-${Date.now()}`,
-    userId: request.fromUser.id,
-    name: request.fromUser.name,
-    role: request.fromUser.role,
-    relationship: request.relationship,
-    status: "online",
-  };
-  contacts.push(contact);
-  res.json({ contact });
-});
+    const criteria = {
+      role: { $in: ELIGIBLE_ROLES },
+      _id: { $nin: Array.from(excludedIds) },
+    };
 
-router.patch("/requests/:id/decline", (req, res) => {
-  const { id } = req.params;
-  const index = requests.findIndex((r) => r.id === id);
-  if (index === -1) return res.status(404).json({ message: "Solicitação não encontrada" });
-  const [removed] = requests.splice(index, 1);
-  res.json({ removed });
-});
+    if (regex) {
+      criteria.name = regex;
+    }
 
-router.patch("/contacts/:id", (req, res) => {
-  const { id } = req.params;
-  const { relationship } = req.body || {};
-  const contact = contacts.find((c) => c.id === id);
-  if (!contact) return res.status(404).json({ message: "Contato não encontrado" });
-  if (relationship) contact.relationship = relationship;
-  res.json({ contact });
-});
+    const targets = await User.find(criteria).limit(10).select("name role online");
+
+    res.json({
+      targets: targets.map((t) => ({
+        id: t.id,
+        name: t.name,
+        role: t.role,
+        status: t.online ? "online" : "offline",
+      })),
+    });
+  })
+);
+
+router.post(
+  "/requests",
+  asyncHandler(async (req, res) => {
+    const { targetId, relationship = "amigo", note = "" } = req.body || {};
+    if (!targetId) return res.status(400).json({ message: "Contato alvo é obrigatório" });
+    if (targetId === req.user._id.toString()) return res.status(400).json({ message: "Não é possível convidar a si mesmo" });
+
+    const target = await User.findById(targetId).select("name role online");
+    if (!target || !ELIGIBLE_ROLES.includes(target.role)) {
+      return res.status(400).json({ message: "Contato não elegível" });
+    }
+
+    const existingContact = await Contact.findOne({ owner: req.user._id, target: targetId });
+    if (existingContact) return res.status(409).json({ message: "Contato já existe" });
+
+    const existingRequest = await ContactRequest.findOne({ from: req.user._id, to: targetId, status: "pendente" });
+    if (existingRequest) return res.status(409).json({ message: "Solicitação já enviada" });
+
+    const request = await ContactRequest.create({ from: req.user._id, to: targetId, relationship, note });
+
+    res.status(201).json({
+      id: request.id,
+      relationship: request.relationship,
+      note: request.note,
+      status: request.status,
+      direction: "outgoing",
+      fromUser: { id: req.user._id, name: req.user.name, role: req.user.role },
+      target: { id: target.id, name: target.name, role: target.role },
+    });
+  })
+);
+
+router.patch(
+  "/requests/:id/accept",
+  asyncHandler(async (req, res) => {
+    const request = await ContactRequest.findById(req.params.id).populate("from", "name role online");
+    if (!request || !request.to.equals(req.user._id) || request.status !== "pendente") {
+      return res.status(404).json({ message: "Solicitação não encontrada" });
+    }
+
+    request.status = "aceita";
+    await request.save();
+
+    const [contactA, contactB] = await Promise.all([
+      Contact.findOneAndUpdate(
+        { owner: req.user._id, target: request.from._id },
+        { relationship: request.relationship },
+        { new: true, upsert: true }
+      ),
+      Contact.findOneAndUpdate(
+        { owner: request.from._id, target: req.user._id },
+        { relationship: request.relationship },
+        { new: true, upsert: true }
+      ),
+    ]);
+
+    const hydrated = await contactA.populate("target", "name role online");
+
+    res.json({ contact: normalizeContact(hydrated) });
+  })
+);
+
+router.patch(
+  "/requests/:id/decline",
+  asyncHandler(async (req, res) => {
+    const request = await ContactRequest.findById(req.params.id);
+    if (!request || (!request.to.equals(req.user._id) && !request.from.equals(req.user._id))) {
+      return res.status(404).json({ message: "Solicitação não encontrada" });
+    }
+
+    await ContactRequest.deleteOne({ _id: req.params.id });
+    res.json({ removed: { id: request.id } });
+  })
+);
+
+router.patch(
+  "/contacts/:id",
+  asyncHandler(async (req, res) => {
+    const { relationship } = req.body || {};
+    const contact = await Contact.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
+      { relationship },
+      { new: true }
+    ).populate("target", "name role online");
+
+    if (!contact) return res.status(404).json({ message: "Contato não encontrado" });
+
+    res.json({ contact: normalizeContact(contact) });
+  })
+);
 
 export default router;

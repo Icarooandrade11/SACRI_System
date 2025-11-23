@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
     organization: String,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    online: { type: Boolean, default: false },
+    lastSeenAt: { type: Date },
   },
   { timestamps: true }
 );

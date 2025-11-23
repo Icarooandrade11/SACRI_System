@@ -4,6 +4,8 @@ import generateToken from "../utils/generateToken.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { ROLES } from "../utils/roles.js";
 import { sendPasswordRecoveryEmail } from "../utils/mailer.js";
+import { setUserOffline, setUserOnline } from "../utils/presence.js";
+import { emitPresenceSnapshot } from "../utils/socket.js";
 
 const buildUserResponse = (user) => ({
   _id: user.id,
@@ -38,6 +40,8 @@ export const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
+        await setUserOnline(user._id);
+        emitPresenceSnapshot();
     return res.json(buildUserResponse(user));
   }
 
@@ -52,6 +56,8 @@ export const getProfile = asyncHandler(async (req, res) => {
     role: req.user.role,
     phone: req.user.phone,
     organization: req.user.organization,
+    online: req.user.online,
+    lastSeenAt: req.user.lastSeenAt,
   });
 });
 
@@ -75,7 +81,15 @@ export const updateProfile = asyncHandler(async (req, res) => {
     role: updated.role,
     phone: updated.phone,
     organization: updated.organization,
+    online: updated.online,
+    lastSeenAt: updated.lastSeenAt,
   });
+});
+
+export const logoutUser = asyncHandler(async (req, res) => {
+  await setUserOffline(req.user._id);
+  emitPresenceSnapshot();
+  return res.json({ message: "Sessão encerrada" });
 });
 
 export const forgotPassword = asyncHandler(async (req, res) => {

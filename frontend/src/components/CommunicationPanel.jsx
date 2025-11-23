@@ -13,7 +13,7 @@ const RELATIONSHIPS = [
 
 export default function CommunicationPanel() {
   const { addFeedback } = useFeedback();
-  const { contacts, requests, targets, sendRequest, acceptRequest, declineRequest, updateRelationship, pendingIncoming } =
+  const { contacts, requests, targets, sendRequest, acceptRequest, declineRequest, updateRelationship, pendingIncoming, searchTargets } =
     useCommunication();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("todos");
@@ -21,6 +21,7 @@ export default function CommunicationPanel() {
   const [selectedTarget, setSelectedTarget] = useState("");
   const [targetRelationship, setTargetRelationship] = useState("amigo");
   const [requestNote, setRequestNote] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const visibleContacts = useMemo(() => {
     if (filter === "todos") return contacts;
@@ -43,6 +44,11 @@ export default function CommunicationPanel() {
     await sendRequest(selectedTarget, targetRelationship, requestNote);
     setSelectedTarget("");
     setRequestNote("");
+  }
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    await searchTargets(searchTerm.trim());
   }
 
   return (
@@ -189,6 +195,21 @@ export default function CommunicationPanel() {
           <div className="space-y-2">
             <p className="text-sm font-semibold text-[#0e2a47]">Convide alguém</p>
             <form className="space-y-2" onSubmit={handleSendRequest}>
+                            <div className="flex gap-2">
+                <input
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                  placeholder="Buscar por nome ou início do nome"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="rounded-full bg-[#0e7490] text-white px-3 text-sm font-semibold hover:bg-[#0c6a81]"
+                >
+                  Buscar
+                </button>
+              </div>
               <select
                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
                 value={selectedTarget}
@@ -197,7 +218,7 @@ export default function CommunicationPanel() {
                 <option value="">Selecione um contato sugerido</option>
                 {targets.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} — {t.role}
+                    {t.name} — {t.role} {t.status === "online" ? "• online" : ""}
                   </option>
                 ))}
               </select>

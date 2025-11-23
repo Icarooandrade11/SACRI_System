@@ -1,43 +1,74 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import api from "../api/api";
+import { useAuth } from "./AuthContext.jsx";
+import { ensureSocketConnected, getSocket, disconnectSocket } from "../services/socket";
 
 const CommunicationContext = createContext();
 
 export function CommunicationProvider({ children }) {
-  const [contacts, setContacts] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [targets, setTargets] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
+    const [contacts, setContacts] = useState([]);
+    const [requests, setRequests] = useState([]);
+    const [targets, setTargets] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  async function loadData() {
-  setLoading(true);
-  try {
-    const [{ data: main }, { data: targetData }] = await Promise.all([
-      api.get("/contacts"),
-      api.get("/contacts/targets"),
-    ]);
+  async function loadData(searchTerm = "") {
+    if (!user) {
+      setContacts([]);
+      setRequests([]);
+      setTargets([]);
+      setLoading(false);
+      return;
+    }
 
-    setContacts(main?.contacts ?? []);
-    setRequests(main?.requests ?? []);
-    setTargets(targetData?.targets ?? []);
-  } catch (error) {
-    console.error("Erro ao carregar contatos:", error);
+    setLoading(true);
+    try {
+      const [{ data: main }, { data: targetData }] = await Promise.all([
+        api.get("/contacts"),
+        api.get("/contacts/targets", { params: searchTerm ? { search: searchTerm } : {} }),
+      ]);
 
-    // Garante que o app não quebre se der erro
-    setContacts([]);
-    setRequests([]);
-    setTargets([]);
-
-    // (Opcional) você pode guardar esse erro num estado pra exibir na tela:
-    // setError("Não foi possível carregar os dados de comunicação.");
-  } finally {
-    setLoading(false);
+      setContacts(main?.contacts ?? []);
+      setRequests(main?.requests ?? []);
+      setTargets(targetData?.targets ?? []);
+    } catch (error) {
+      console.error("Erro ao carregar contatos:", error);
+      setContacts([]);
+      setRequests([]);
+      setTargets([]);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   useEffect(() => {
     loadData();
-  }, []);
+   }, [user?._id]);
+
+  useEffect(() => {
+    if (!user?.token) return undefined;
+    const socket = ensureSocketConnected(user.token);
+
+    const handlePresence = (onlineUsers = []) => {
+      const onlineSet = new Set(onlineUsers.filter((u) => u.online).map((u) => u.id));
+      setContacts((prev) => prev.map((c) => ({ ...c, status: onlineSet.has(c.userId) ? "online" : "offline" })));
+      setTargets((prev) => prev.map((t) => ({ ...t, status: onlineSet.has(t.id) ? "online" : "offline" })));
+    };
+
+    socket.on("presence:update", handlePresence);
+
+    return () => {
+      socket.off("presence:update", handlePresence);
+    };
+  }, [user?.token]);
+
+  useEffect(() => {
+    if (!user) {
+      disconnectSocket();
+    } else {
+      getSocket(user.token);
+    }
+  }, [user]);
 
   async function sendRequest(targetId, relationship, note) {
     const { data } = await api.post("/contacts/requests", { targetId, relationship, note });
@@ -64,6 +95,10 @@ export function CommunicationProvider({ children }) {
     return data.contact;
   }
 
+    async function searchTargets(searchTerm) {
+    await loadData(searchTerm);
+  }
+
   const pendingIncoming = useMemo(
     () => requests.filter((r) => r.direction === "incoming" && r.status === "pendente"),
     [requests]
@@ -80,6 +115,7 @@ export function CommunicationProvider({ children }) {
       declineRequest,
       updateRelationship,
       pendingIncoming,
+      searchTargets,
     }),
     [loading, contacts, requests, targets, pendingIncoming]
   );
@@ -92,4 +128,3 @@ export function useCommunication() {
   if (!ctx) throw new Error("useCommunication deve ser usado dentro de CommunicationProvider");
   return ctx;
 }
-

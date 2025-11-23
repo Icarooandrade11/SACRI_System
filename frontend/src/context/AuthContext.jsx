@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import api, { TOKEN_KEY } from "../api/api";
+import { disconnectSocket } from "../services/socket";
 import { ROLES } from "../rbac/roles";
 
 const USER_KEY = "sacri_user";
@@ -59,8 +60,17 @@ export function AuthProvider({ children }) {
     });
   }
 
-  function logout() {
-    persistSession(null);
+    async function logout() {
+    try {
+      if (localStorage.getItem(TOKEN_KEY)) {
+        await api.post("/auth/logout");
+      }
+    } catch (error) {
+      console.error("Erro ao encerrar sessão", error);
+    } finally {
+      disconnectSocket();
+      persistSession(null);
+    }
   }
 
   async function refreshProfile() {

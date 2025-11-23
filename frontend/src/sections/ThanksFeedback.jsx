@@ -27,7 +27,7 @@ export default function ThanksFeedback() {
               <span>{opt}</span>
             </label>
           ))}
-          <div className="text-xs text-error mt-2">• Ocorreu um problema</div>
+          <div className="text-xs text-ellipsis mt-1">• Responda com lealdade</div>
         </form>
       </div>
     </section>

@@ -30,6 +30,7 @@ import PerfilFornecedor from "./features/fornecedor/pages/Perfil.jsx"; // NOVO
 import CommunicationPanel from "./components/CommunicationPanel.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
 
+
 function ProtectedByRole({ allow, children }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -38,8 +39,15 @@ function ProtectedByRole({ allow, children }) {
 }
 
 export default function App() {
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
+  const userRole = user?.role;
+  const contactsAllowed = [ROLES.AGENTE, ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const isInsideSystem = pathname.startsWith("/fornecedor");
+  const canSeeContacts = isInsideSystem && contactsAllowed.includes(userRole);
+  const canSeeNotifications = isInsideSystem && notificationsAllowed.includes(userRole);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,7 +74,7 @@ export default function App() {
           <Route
             path="/fornecedor"
             element={
-              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ADMIN]}>
+              <ProtectedByRole allow={[ROLES.AGENTE, ROLES.PARCEIRO, ROLES.GESTOR, ROLES.ONG, ROLES.ADMIN]}>
                 <FornecedorLayout />
               </ProtectedByRole>
             }
@@ -86,8 +94,12 @@ export default function App() {
         </Routes>
       </main>
 
-      <CommunicationPanel />
-      <ChatWidget />
+      {(canSeeContacts || canSeeNotifications) && (
+        <>
+          {canSeeContacts && <CommunicationPanel />}
+          {canSeeNotifications && <ChatWidget />}
+        </>
+      )}
 
       <Footer />
     </div>

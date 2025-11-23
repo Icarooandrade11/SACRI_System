@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
+import SystemNotificationBell from "../../components/SystemNotificationBell.jsx";
 
 const items = [
   { to: "/fornecedor/plantacoes", label: "PLANTAÇÕES" },
@@ -32,8 +33,9 @@ export default function FornecedorLayout() {
             <span className="text-2xl font-extrabold text-gray-400 select-none">SYSTEM</span>
           </div>
 
-          {/* Dropdown de perfil */}
-          <div className="ml-auto">
+          {/* Notificações e perfil */}
+          <div className="ml-auto flex items-center gap-2">
+            <SystemNotificationBell />
             <div className="dropdown dropdown-end">
               <button className="btn btn-ghost btn-sm flex items-center gap-2" tabIndex={0}>
                 <span className="hidden sm:block">PERFIL</span>
@@ -73,12 +75,12 @@ export default function FornecedorLayout() {
       {/* fundo com shapes */}
       <div className="relative">
         <motion.div
-          className="absolute left-[20%] top-0 w-[55%] h-40 bg-[#9bd9e6]/40 rounded-3xl"
+          className="absolute left-[20%] top-0 w-[55%] h-40 bg-[#9bd9e6]/40 rounded-3xl -z-10"
           animate={{ y: [0, 8, 0] }}
           transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute left-[30%] top-56 w-[48%] h-52 bg-[#9bd9e6]/30 rounded-3xl rotate-6"
+          className="absolute left-[30%] top-56 w-[48%] h-52 bg-[#9bd9e6]/30 rounded-3xl rotate-6 -z-10"
           animate={{ y: [0, -10, 0] }}
           transition={{ repeat: Infinity, duration: 7.5, ease: "easeInOut" }}
         />

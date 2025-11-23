@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLES } from "../rbac/roles";
 
-const SYSTEM_ROLES = [ROLES.AGENTE, ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN];
+const SYSTEM_ROLES = [ROLES.AGENTE, ROLES.GESTOR, ROLES.PARCEIRO, ROLES.ADMIN, ROLES.ONG];
 
 export default function Navbar({ variant }) {
   const { pathname } = useLocation();

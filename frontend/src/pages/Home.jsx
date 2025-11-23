@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext.jsx";
+import { ROLES } from "../context/AuthContext.jsx";
+
 
 // --- Seções (conforme seu projeto)
 import VisionGrid from "../sections/VisionGrid";
@@ -15,9 +18,14 @@ import FooterCTA from "../sections/FooterCTA";
 import RoleAccess from "../sections/RoleAccess";
 import AdminFeedback from "../sections/AdminFeedback";
 
+
 export default function Home() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const { user } = useAuth() || {};
+  const userRole = user?.role ?? null;
+  const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
+  const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
 
   function handleSearch(e) {
     e.preventDefault();
@@ -31,7 +39,7 @@ export default function Home() {
   };
 
   // Wrapper para padronizar cada seção de conteúdo
-  const SectionWrap = ({ children, delay = 0 }) => (
+    const SectionWrap = ({ children, delay = 0 }) => (
     <motion.section
       className="bg-transparent"
       initial={{ opacity: 0, y: 40 }}
@@ -50,17 +58,17 @@ export default function Home() {
         {/* SHAPES – fundo direito (flutuam de leve) */}
         <motion.div
           {...float}
-          className="pointer-events-none absolute right-20 top-6 w-[240px] h-[520px] rounded-[36px] bg-[#CDECF9] opacity-80 rotate-[10deg] -z-10"
+          className="pointer-events-none absolute right-20 top-6 w-[240px] h-[520px] rounded-[36px] bg-[#CDECF9] opacity-80 rotate-[10deg]"
         />
         <motion.div
           {...float}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute right-8 top-10 w-[620px] h-[900px] rounded-[42px] bg-[#CFF6C6] opacity-70 rotate-[15deg] -z-10"
+          className="pointer-events-none absolute right-8 top-10 w-[620px] h-[900px] rounded-[42px] bg-[#CFF6C6] opacity-70 rotate-[15deg]"
         />
         <motion.div
           {...float}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-none absolute -right-12 bottom-[-40px] w-[360px] h-[360px] rotate-[22deg] -z-10"
+          className="pointer-events-none absolute -right-12 bottom-[-40px] w-[360px] h-[360px] rotate-[22deg]"
         >
           <svg viewBox="0 0 200 200" className="w-full h-full">
             <path
@@ -139,7 +147,7 @@ export default function Home() {
       <SectionWrap delay={0.05}><AccessQuestions /></SectionWrap>
       <SectionWrap delay={0.1}><ResourcesGrid /></SectionWrap>
       <SectionWrap delay={0.15}><RoleAccess /></SectionWrap>
-      <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>
+      {canSeeAdminFeedback && <SectionWrap delay={0.2}><AdminFeedback /></SectionWrap>}
       <SectionWrap><FAQ /></SectionWrap>
       <SectionWrap><ThanksFeedback /></SectionWrap>
       <SectionWrap><ExperiencePoll /></SectionWrap>

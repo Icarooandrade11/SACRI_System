@@ -6,6 +6,7 @@ import { ROLES } from "../utils/roles.js";
 import { sendPasswordRecoveryEmail } from "../utils/mailer.js";
 import { setUserOffline, setUserOnline } from "../utils/presence.js";
 import { emitPresenceSnapshot } from "../utils/socket.js";
+import { attachAuthCookie, clearAuthCookie } from "../utils/cookies.js";
 
 const buildUserResponse = (user) => ({
   _id: user.id,
@@ -31,8 +32,10 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   const normalizedRole = Object.values(ROLES).includes(role) ? role : ROLES.MORADOR;
   const user = await User.create({ name, email, password, role: normalizedRole, phone, organization });
+  const payload = buildUserResponse(user);
+  attachAuthCookie(res, payload.token);
 
-  return res.status(201).json(buildUserResponse(user));
+  return res.status(201).json(payload);
 });
 
 export const loginUser = asyncHandler(async (req, res) => {
@@ -40,9 +43,11 @@ export const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
-        await setUserOnline(user._id);
-        emitPresenceSnapshot();
-    return res.json(buildUserResponse(user));
+    await setUserOnline(user._id);
+    emitPresenceSnapshot();
+    const payload = buildUserResponse(user);
+    attachAuthCookie(res, payload.token);
+    return res.json(payload);
   }
 
   return res.status(401).json({ message: "Credenciais inválidas" });
@@ -89,6 +94,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
 export const logoutUser = asyncHandler(async (req, res) => {
   await setUserOffline(req.user._id);
   emitPresenceSnapshot();
+  clearAuthCookie(res);
   return res.json({ message: "Sessão encerrada" });
 });
 

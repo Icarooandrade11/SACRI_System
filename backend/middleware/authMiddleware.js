@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { getAuthTokenFromRequest } from "../utils/cookies.js";
 
 const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -9,18 +10,26 @@ const protect = asyncHandler(async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   }
 
+    if (!token) {
+    token = getAuthTokenFromRequest(req);
+  }
+
   if (!token) {
     return res.status(401).json({ message: "Sem token, acesso negado" });
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = await User.findById(decoded.id).select("-password");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select("-password");
 
-  if (!req.user) {
-    return res.status(401).json({ message: "Usuário não encontrado" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Usuário não encontrado" });
+    }
+
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: "Token inválido" });
   }
-
-  return next();
 });
 
 export const authorizeRoles = (...roles) => (req, res, next) => {

@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import protect from "../middleware/authMiddleware.js";
 import { ROLES } from "../utils/roles.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { buildDirectChannel } from "../utils/chatChannels.js";
 
 const router = express.Router();
 const ELIGIBLE_ROLES = [ROLES.AGENTE, ROLES.GESTOR, ROLES.ONG];
@@ -18,7 +19,8 @@ function normalizeContact(doc) {
     role: doc.target.role,
     relationship: doc.relationship,
     status: doc.target.online ? "online" : "offline",
-    };
+    channel: buildDirectChannel(doc.owner, doc.target),
+  };
 }
 
 router.use(protect);

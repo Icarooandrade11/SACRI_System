@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { TOKEN_KEY } from "../api/api";
+import api from "../api/api";
 import { disconnectSocket } from "../services/socket";
 import { ROLES } from "../rbac/roles";
 
@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(USER_KEY);
+      const raw = sessionStorage.getItem(USER_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         setUser(parsed);
@@ -27,25 +27,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!bootstrapped) return;
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token && !user) {
-      refreshProfile();
-    }
+    if (!user) refreshProfile();
   }, [bootstrapped]);
 
   function persistSession(payload) {
     if (!payload) {
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(USER_KEY);
       setUser(null);
       return;
     }
-    const session = { ...payload };
-    setUser(session);
-    localStorage.setItem(USER_KEY, JSON.stringify(session));
-    if (session.token) {
-      localStorage.setItem(TOKEN_KEY, session.token);
-    }
+    const { token: _, ...session } = payload;
+    sessionStorage.setItem(USER_KEY, JSON.stringify(session));
   }
 
   function login(payload) {
@@ -60,11 +52,9 @@ export function AuthProvider({ children }) {
     });
   }
 
-    async function logout() {
+  async function logout() {
     try {
-      if (localStorage.getItem(TOKEN_KEY)) {
-        await api.post("/auth/logout");
-      }
+      await api.post("/auth/logout");
     } catch (error) {
       console.error("Erro ao encerrar sessão", error);
     } finally {
@@ -75,13 +65,7 @@ export function AuthProvider({ children }) {
 
   async function refreshProfile() {
     try {
-      const { data } = await api.get("/auth/me");
-      const token = localStorage.getItem(TOKEN_KEY) || user?.token;
-      if (token) {
-        persistSession({ ...data, token });
-      } else {
-        setUser(data);
-      }
+      persistSession({ ...user, ...data });
       return data;
     } catch (error) {
       logout();

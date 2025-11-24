@@ -5,26 +5,20 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || API_BASE_URL.replace(/\/ap
 
 let socket;
 
-export function getSocket(token) {
+export function getSocket() {
   if (!socket) {
     socket = io(SOCKET_URL, {
       autoConnect: false,
       transports: ["websocket", "polling"],
+      withCredentials: true,
     });
-  }
-
-  if (token) {
-    socket.auth = { token };
   }
 
   return socket;
 }
 
-export function ensureSocketConnected(token) {
-  const instance = getSocket(token);
-  if (token) {
-    instance.auth = { token };
-  }
+export function ensureSocketConnected() {
+  const instance = getSocket();
   if (!instance.connected) {
     instance.connect();
   }

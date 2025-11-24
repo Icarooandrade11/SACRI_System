@@ -3,6 +3,7 @@ import ChatMessage from "../models/ChatMessage.js";
 import protect from "../middleware/authMiddleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { emitChatMessage } from "../utils/socket.js";
+import { buildDirectChannel, canAccessChannel, extractDirectTarget } from "../utils/chatChannels.js";
 
 const router = express.Router();
 
@@ -11,7 +12,13 @@ router.use(protect);
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const channel = req.query.channel || "geral";
+    const requestedChannel = req.query.channel || "geral";
+    const directTarget = extractDirectTarget(requestedChannel, req.user._id);
+    const channel = requestedChannel.startsWith("dm:") && directTarget
+      ? buildDirectChannel(req.user._id, directTarget)
+      : requestedChannel;
+    const allowed = await canAccessChannel(req.user._id, channel);
+    if (!allowed) return res.status(403).json({ message: "Canal não autorizado" });
     const messages = await ChatMessage.find({ channel })
       .sort({ createdAt: -1 })
       .limit(50)
@@ -34,7 +41,14 @@ router.get(
 router.post(
   "/",
   asyncHandler(async (req, res) => {
-    const channel = req.body?.channel || "geral";
+    const requestedChannel = req.body?.channel || "geral";
+    const directTarget = extractDirectTarget(requestedChannel, req.user._id);
+    const channel = requestedChannel.startsWith("dm:") && directTarget
+      ? buildDirectChannel(req.user._id, directTarget)
+      : requestedChannel;
+
+    const allowed = await canAccessChannel(req.user._id, channel);
+    if (!allowed) return res.status(403).json({ message: "Canal não autorizado" });
     const content = (req.body?.text || req.body?.content || "").trim();
     if (!content) return res.status(400).json({ message: "Mensagem obrigatória" });
 

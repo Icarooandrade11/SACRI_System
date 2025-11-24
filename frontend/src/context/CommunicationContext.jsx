@@ -46,8 +46,8 @@ export function CommunicationProvider({ children }) {
    }, [user?._id]);
 
   useEffect(() => {
-    if (!user?.token) return undefined;
-    const socket = ensureSocketConnected(user.token);
+    if (!user?._id) return undefined;
+    const socket = ensureSocketConnected();
 
     const handlePresence = (onlineUsers = []) => {
       const onlineSet = new Set(onlineUsers.filter((u) => u.online).map((u) => u.id));
@@ -60,13 +60,13 @@ export function CommunicationProvider({ children }) {
     return () => {
       socket.off("presence:update", handlePresence);
     };
-  }, [user?.token]);
+  }, [user?._id]);
 
   useEffect(() => {
     if (!user) {
       disconnectSocket();
     } else {
-      getSocket(user.token);
+      getSocket();
     }
   }, [user]);
 
@@ -95,7 +95,7 @@ export function CommunicationProvider({ children }) {
     return data.contact;
   }
 
-    async function searchTargets(searchTerm) {
+  async function searchTargets(searchTerm) {
     await loadData(searchTerm);
   }
 

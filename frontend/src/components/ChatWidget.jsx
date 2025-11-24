@@ -3,7 +3,7 @@ import api from "../api/api";
 import { useAuth } from "../context/AuthContext.jsx";
 import { ensureSocketConnected } from "../services/socket";
 
-const threads = [
+const defaultThreads = [
   { id: "geral", title: "Canal geral", audience: "Comunidade" },
   { id: "logistica", title: "Equipe logística", audience: "Logística" },
   { id: "parceiros", title: "Parceiros/ONGs", audience: "Parceiros" },
@@ -15,21 +15,56 @@ const timeString = (value) =>
 export default function ChatWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [activeThread, setActiveThread] = useState(threads[0]);
+  const [activeThread, setActiveThread] = useState(defaultThreads[0]);
   const [messages, setMessages] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [draft, setDraft] = useState("");
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
 
-    const threadMessages = useMemo(
+  const contactThreads = useMemo(
+    () =>
+      contacts.map((contact) => ({
+        id: contact.channel,
+        title: contact.name,
+        audience: `${contact.relationship} • privado`,
+      })),
+    [contacts]
+  );
+
+  const availableThreads = useMemo(
+    () => [...defaultThreads, ...contactThreads],
+    [contactThreads]
+  );
+
+  const threadMessages = useMemo(
     () => messages.filter((m) => m.channel === activeThread.id),
     [messages, activeThread.id]
   );
 
   useEffect(() => {
-    if (!user?.token) return undefined;
-    const socket = ensureSocketConnected(user.token);
+    if (!user?._id) return;
+    (async () => {
+      try {
+        const { data } = await api.get("/contacts");
+        setContacts(data?.contacts || []);
+      } catch (error) {
+        console.error("Erro ao carregar contatos", error);
+      }
+    })();
+  }, [user?._id]);
+
+  useEffect(() => {
+    const exists = availableThreads.some((t) => t.id === activeThread.id);
+    if (!exists) {
+      setActiveThread(defaultThreads[0]);
+    }
+  }, [availableThreads, activeThread.id]);
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+    const socket = ensureSocketConnected();
     socketRef.current = socket;
 
     const handleConnect = () => setConnected(true);
@@ -51,10 +86,10 @@ export default function ChatWidget() {
       socket.off("disconnect", handleDisconnect);
       socket.off("chat:message", handleMessage);
     };
-  }, [user?.token, activeThread.id]);
+  }, [user?._id, activeThread.id]);
   
   useEffect(() => {
-    if (!user?.token) return;
+    if (!user?._id) return;
     (async () => {
       setLoading(true);
       try {
@@ -69,7 +104,7 @@ export default function ChatWidget() {
         setLoading(false);
       }
     })();
-  }, [activeThread.id, user?.token]);
+   }, [activeThread.id, user?._id]);
 
   function sendMessage() {
     if (!draft.trim() || !socketRef.current) return;
@@ -103,8 +138,8 @@ export default function ChatWidget() {
             </div>
           </div>
 
-          <div className="flex border-b border-gray-100 overflow-x-auto px-2 py-2 gap-2 text-sm">
-            {threads.map((t) => (
+          <div className="flex flex-wrap gap-2 border-b border-gray-100 px-2 py-2 text-sm">
+            {availableThreads.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveThread(t)}
@@ -112,8 +147,8 @@ export default function ChatWidget() {
                   activeThread.id === t.id ? "bg-[#CFF6C6] border-[#0e7490]" : "border-gray-200"
                 }`}
               >
-                {t.title}
-
+                <span className="block leading-tight">{t.title}</span>
+                <span className="block text-[10px] text-gray-500">{t.audience}</span>
               </button>
             ))}
           </div>

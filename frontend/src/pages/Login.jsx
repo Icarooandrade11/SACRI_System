@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, mockLoginParceiro } from "../context/AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,11 +24,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleMockParceiro() {
-    mockLoginParceiro(login); // seta role PARCEIRO
-    navigate("/fornecedor");  // redireciona para a área do parceiro
   }
 
   return (
@@ -75,11 +70,6 @@ export default function Login() {
               {loading ? "Entrando..." : "Log in"}
             </button>
           </form>
-
-          <button onClick={handleMockParceiro} className="btn btn-sm mt-4">
-            Entrar como PARCEIRO (mock)
-          </button>
-
           <div className="text-sm mt-2">
             ou <Link to="/registrar" className="link link-primary">criar conta</Link>
           </div>

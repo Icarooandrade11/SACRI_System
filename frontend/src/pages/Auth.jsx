@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth, mockLoginParceiro } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import api from "../api/api";
 import { ROLES } from "../rbac/roles";
 
@@ -15,7 +15,7 @@ function Field({ icon, ...props }) {
   );
 }
 
-function LoginForm({ onMock }) {
+function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -62,10 +62,6 @@ function LoginForm({ onMock }) {
       </button>
 
       {error && <p className="text-sm text-red-600 text-center">{error}</p>}
-
-      <button type="button" onClick={onMock} className="btn btn-sm">
-        Entrar como PARCEIRO (mock)
-      </button>
 
       <div className="text-sm space-y-1 text-center">
         <div>
@@ -202,7 +198,7 @@ function TealOverlay({ side }) {
 export default function Auth() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth(); // para o mock
+  const { login } = useAuth();
 
   const [mode, setMode] = useState("login"); // 'login' | 'signup'
   const isLogin = mode === "login";
@@ -221,12 +217,6 @@ export default function Auth() {
     setMode("signup");
     navigate("/registrar", { replace: true });
   }
-  function handleMockParceiro() {
-    // agora realmente loga e redireciona
-    mockLoginParceiro(login);
-    navigate("/fornecedor", { replace: true });
-  }
-
   const inactiveSide = isLogin ? "right" : "left";
 
   return (
@@ -250,7 +240,7 @@ export default function Auth() {
                   className="w-[520px] max-w-[90%] rounded-[24px] bg-white/90 p-8 shadow-md"
                 >
                   <div className="text-3xl font-extrabold text-emerald-800 mb-6">Log in</div>
-                  <LoginForm onMock={handleMockParceiro} />
+                  <LoginForm/>
                 </motion.div>
               )}
             </AnimatePresence>

@@ -84,23 +84,12 @@ export function AuthProvider({ children }) {
       delete api.defaults.headers.common.Authorization;
     }
   }, [user?.token]);
-  
+
   const value = { user, login, logout, updateUser, refreshProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
-
-export const mockLoginParceiro = (loginFn) =>
-  loginFn({
-    _id: "mock-001",
-    name: "Fornecedor Alfa",
-    email: "fornecedor@sacri.dev",
-    role: ROLES.PARCEIRO,
-    token: "mock-dev",
-    phone: "(87) 99999-0000",
-    organization: "Parceiros SACRI",
-  });
 
 export { ROLES };

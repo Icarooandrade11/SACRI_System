@@ -3,8 +3,14 @@ import Contact from "../models/Contact.js";
 
 export const PUBLIC_CHANNELS = new Set(["geral", "logistica", "parceiros"]);
 
+function normalizeId(value) {
+  if (!value) return "";
+  if (value._id) return value._id.toString();
+  return value.toString();
+}
+
 export function buildDirectChannel(userId, targetId) {
-  const [a, b] = [userId.toString(), targetId.toString()].sort();
+  const [a, b] = [normalizeId(userId), normalizeId(targetId)].sort();
   return `dm:${a}:${b}`;
 }
 

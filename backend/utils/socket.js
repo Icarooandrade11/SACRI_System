@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import ChatMessage from "../models/ChatMessage.js";
 import User from "../models/User.js";
-import { listOnlineUsers, setUserOffline, setUserOnline } from "../utils/presence.js";
+import { listOnlineUsers, setUserOffline, setUserOnline } from "./presence.js";
 
 let ioInstance;
 

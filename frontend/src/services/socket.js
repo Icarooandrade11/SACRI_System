@@ -17,8 +17,11 @@ export function getSocket() {
   return socket;
 }
 
-export function ensureSocketConnected() {
+export function ensureSocketConnected(authToken) {
   const instance = getSocket();
+  if (authToken) {
+    instance.auth = { token: authToken };
+  }
   if (!instance.connected) {
     instance.connect();
   }

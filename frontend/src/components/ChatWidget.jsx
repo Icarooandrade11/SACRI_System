@@ -64,10 +64,13 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (!user?._id) return undefined;
-    const socket = ensureSocketConnected();
+    const socket = ensureSocketConnected(user?.token);
     socketRef.current = socket;
 
-    const handleConnect = () => setConnected(true);
+    const handleConnect = () => {
+      setConnected(true);
+      socket.emit("chat:join", activeThread.id);
+    };
     const handleDisconnect = () => setConnected(false);
     const handleMessage = (message) => {
       setMessages((prev) => {
@@ -79,7 +82,9 @@ export default function ChatWidget() {
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("chat:message", handleMessage);
-    socket.emit("chat:join", activeThread.id);
+    if (socket.connected) {
+      socket.emit("chat:join", activeThread.id);
+    }
 
     return () => {
       socket.off("connect", handleConnect);

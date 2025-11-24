@@ -27,7 +27,7 @@ function LoginForm({ onMock }) {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("auth/login", f);
+      const { data } = await api.post("/auth/login", f);
       login(data);
       if (data.role === ROLES.MORADOR) navigate("/", { replace: true });
       else navigate("/fornecedor", { replace: true });

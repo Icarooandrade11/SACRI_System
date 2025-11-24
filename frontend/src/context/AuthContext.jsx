@@ -36,18 +36,19 @@ export function AuthProvider({ children }) {
       setUser(null);
       return;
     }
-    const { token: _, ...session } = payload;
-    sessionStorage.setItem(USER_KEY, JSON.stringify(session));
+    sessionStorage.setItem(USER_KEY, JSON.stringify(payload));
+    setUser(payload);
   }
 
   function login(payload) {
+    if (!payload) return;
     persistSession(payload);
   }
 
   function updateUser(partial) {
     setUser((prev) => {
       const next = { ...(prev || {}), ...(partial || {}) };
-      persistSession(next);
+      sessionStorage.setItem(USER_KEY, JSON.stringify(next));
       return next;
     });
   }
@@ -65,14 +66,25 @@ export function AuthProvider({ children }) {
 
   async function refreshProfile() {
     try {
-      persistSession({ ...user, ...data });
-      return data;
+      const { data } = await api.get("/auth/me");
+      const next = { ...(user || {}), ...data };
+      persistSession(next);
+      return next;
     } catch (error) {
+      console.error("Erro ao atualizar perfil", error);
       logout();
       return null;
     }
   }
-
+  
+    useEffect(() => {
+    if (user?.token) {
+      api.defaults.headers.common.Authorization = `Bearer ${user.token}`;
+    } else {
+      delete api.defaults.headers.common.Authorization;
+    }
+  }, [user?.token]);
+  
   const value = { user, login, logout, updateUser, refreshProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

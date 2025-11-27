@@ -10,7 +10,7 @@ Ponto de status: o projeto está funcional com autenticação, rotas protegidas,
 
 Backend: Node.js (ESM) + Express + Mongoose + JWT + Bcrypt
 
-Rotas: /api/auth (login/registro), /api/communities e /api/crops (CRUD).
+Rotas: /api/auth (login/registro), /api/communities, /api/plantations, /api/inventory, /api/needs, /api/requests, /api/dashboard, /api/chat, /api/contacts.
 
 Middleware de auth, geração de token, conexão MongoDB.
 
@@ -41,20 +41,45 @@ Project_SACRI/
     package.json
     .env.example
     config/db.js
-    middleware/authMiddleware.js
+    middleware/
+      authMiddleware.js
+      errorMiddleware.js
     models/
       User.js
       Community.js
-      Crop.js
+      Plantation.js
+      InventoryItem.js
+      StockMovement.js
+      Need.js
+      Request.js
+      Contact.js
+      ContactRequest.js
+      ChatMessage.js
     routes/
       authRoutes.js
       communityRoutes.js
-      cropRoutes.js
+      plantationRoutes.js
+      inventoryRoutes.js
+      needRoutes.js
+      requestRoutes.js
+      dashboardRoutes.js
+      chatRoutes.js
+      contactRoutes.js
     controllers/
       authController.js
       communityController.js
-      cropController.js
-    utils/generateToken.js
+      plantationController.js
+      inventoryController.js
+      needController.js
+      requestController.js
+      dashboardController.js
+    utils/
+      generateToken.js
+      chatChannels.js
+      socket.js
+      presence.js
+      roles.js
+      cookies.js
 
   frontend/
     index.html
@@ -124,8 +149,53 @@ FRONTEND_URL=http://localhost:5173
 4.2 Frontend (frontend/.env)
 VITE_API_URL=http://localhost:5000/api
 
-5) Instalação & Execução
-5.1 Backend
+5) Documentação Técnica (versão expandida)
+5.1 Arquitetura em camadas
+- **Frontend (React + Vite)**: SPA que usa React Router para páginas públicas e protegidas, Context API para controle de sessão e axios para falar com o backend. O socket.io-client é usado para presença e chat em tempo real.
+- **Backend (Node.js + Express + Mongoose)**: API REST em ESM, separada em rotas, controllers e models. Middleware `protect` faz a autenticação via JWT (header ou cookie) e `authorizeRoles` valida papéis (`MORADOR`, `AGENTE`, `GESTOR`, `ONG`, `PARCEIRO`, `ADMIN`). Socket.io no servidor mantém chat e status online.
+- **Banco (MongoDB/Mongoose)**: coleções com timestamps automáticos, relações via `ref` (User -> comunidades, plantações, necessidades, mensagens). Utiliza índices de unicidade (ex.: `Request.code`).
+
+5.2 Tecnologias atuais (stack)
+- **Frontend:** React 18, React Router DOM 6, Vite 5, TailwindCSS 3 + DaisyUI, Framer Motion, axios, socket.io-client.
+- **Backend:** Node 18+, Express 4, Mongoose 8, JWT, bcryptjs, cors, dotenv, nodemailer (placeholder), socket.io.
+- **Ferramentas:** nodemon para hot reload do backend, scripts Vite (`dev/build/preview`) para o frontend.
+
+5.3 Organização das camadas do backend
+- `server.js`: inicia Express, conecta no MongoDB, configura CORS (origem do frontend), JSON/body parser, rotas REST e Socket.io.
+- `routes/`: registra endpoints temáticos (`/api/auth`, `/api/communities`, `/api/plantations`, `/api/inventory`, `/api/needs`, `/api/requests`, `/api/dashboard`, `/api/chat`, `/api/contacts`).
+- `controllers/`: lógica de negócio; cada controller recebe o usuário autenticado via middleware para registrar `createdBy` e aplicar regras (ex.: visibilidade por papel no dashboard).
+- `middleware/`: `authMiddleware` (JWT + roles) e `errorMiddleware` (tratamento centralizado de erros assíncronos).
+- `utils/`: geração de token, canais de chat, presença online, cookies e wrapper `asyncHandler`.
+
+5.4 Principais modelos (MongoDB)
+- **User**: nome, email único, senha (hash bcrypt), `role`, `approvalStatus`, dados de recuperação de senha, flags de presença online.
+- **Community**: nome, região, total de famílias, contato, descrição, `createdBy` (User).
+- **Plantation**: nome, cultura, área, estágio (preparo/plantio/manutenção/colheita), status (planejada/em andamento/colhida/suspensa), datas de plantio/colheita, sistema de irrigação, notas, `createdBy`.
+- **InventoryItem** + **StockMovement**: controle de estoque por item (categoria, unidade, quantidades mínimas/atuais, localização) e movimentos (entrada/saída, quantidade, observações, vínculo com item e usuário).
+- **Need**: demanda aberta por comunidade, com prioridade, status, categoria, data alvo e `createdBy`.
+- **Request**: solicitações enviadas a órgãos/ONGs, com código único, destino, itens solicitados, status de fluxo (rascunho → concluída) e `linkedNeed` opcional.
+- **ChatMessage**: mensagens por canal (público ou direto), autor e conteúdo; usadas tanto pelo REST (`/api/chat`) quanto pelo Socket.io.
+- **Contact/ContactRequest**: registros de contato/solicitação externa para triagem.
+
+5.5 API e segurança
+- **Autenticação**: POST `/api/auth/register` e `/api/auth/login` geram JWT; token pode ser enviado no header `Authorization: Bearer <token>` ou cookie. Rotas protegidas exigem `protect`; permissões refinadas com `authorizeRoles`.
+- **Comunidades**: GET/POST `/api/communities` (controle por papel de sistema).
+- **Plantações**: CRUD parcial em `/api/plantations` (lista/cria) e `/api/plantations/:id` (atualiza/exclui).
+- **Inventário**: `/api/inventory/items` (listar/criar), `/api/inventory/items/:id` (atualizar/remover) e `/api/inventory/movements` (listar/criar movimentações).
+- **Necessidades e Solicitações**: `/api/needs` e `/api/requests` expõem criação e leitura de demandas/solicitações; requests podem conter itens e vincular uma Need.
+- **Dashboard**: `/api/dashboard/summary` (indicadores consolidados por papel) e rotas auxiliares de busca/contagem.
+- **Chat**: `/api/chat` suporta listagem (query `channel`) e envio de mensagens; Socket.io mantém presença (`presence:update`) e canais públicos/DMs (`chat:join`, `chat:message`).
+- **Contatos externos**: `/api/contacts` registra pedidos de suporte oriundos das páginas públicas.
+- **Padrões**: JSON consistente, respostas de erro padronizadas em `errorMiddleware`, status HTTP coerentes (401/403 para auth/role, 400 validação, 404 se não encontrado quando aplicável).
+
+5.6 Fluxos e observabilidade
+- **Autenticação end-to-end**: usuário registra/login → token salvo no localStorage pelo AuthContext → axios envia `Authorization` → backend popula `req.user` e aplica roles.
+- **Chat em tempo real**: cliente abre conexão Socket.io com token (auth handshake) → servidor registra presença (`presence:update` broadcast) → mensagens são persistidas e replicadas para o canal.
+- **Monitoramento manual**: logs no console do backend mostram conexão Mongo e porta HTTP; endpoints de listagem (`/api/dashboard/summary`, `/api/inventory/items`) ajudam a validar dados inseridos.
+- **Dados de exemplo**: é possível cadastrar rapidamente via Postman/REST Client com os corpos mínimos indicados nos modelos acima; `code` em Request deve ser único.
+
+6) Instalação & Execução
+6.1 Backend
 cd backend
 npm install
 npm run dev   # nodemon
@@ -134,7 +204,7 @@ npm run dev   # nodemon
 
 Acesse: http://localhost:5000/api/health (se existir rota de health) ou apenas verifique o console.
 
-5.2 Frontend
+6.2 Frontend
 cd ../frontend
 npm install
 npm run dev
@@ -144,7 +214,7 @@ npm run dev
 Se o Vite reclamar de pacote faltando (ex.: @vitejs/plugin-react), rode npm i -D @vitejs/plugin-react.
 Se faltar framer-motion: npm i framer-motion.
 
-6) Autenticação & Fluxo
+7) Autenticação & Fluxo
 
 Registro: /api/auth/register → retorna token JWT.
 
@@ -160,41 +230,45 @@ curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@sacri.com","password":"123456"}'
 
-7) API – Endpoints (resumo)
+8) API – Endpoints (resumo)
 Auth
+- POST /api/auth/register – { name, email, password }
+- POST /api/auth/login – { email, password }
 
-POST /api/auth/register – { name, email, password }
+Comunidades (token obrigatório)
+- GET /api/communities
+- POST /api/communities
 
-POST /api/auth/login – { email, password }
+Plantações (token obrigatório)
+- GET /api/plantations
+- POST /api/plantations
+- PUT /api/plantations/:id
+- DELETE /api/plantations/:id
 
-Communities (token obrigatório)
+Inventário (token obrigatório)
+- GET /api/inventory/items
+- POST /api/inventory/items
+- PUT /api/inventory/items/:id
+- DELETE /api/inventory/items/:id
+- GET /api/inventory/movements
+- POST /api/inventory/movements
 
-GET /api/communities
+Necessidades & Solicitações (token obrigatório)
+- GET /api/needs
+- POST /api/needs
+- PUT /api/needs/:id
+- GET /api/requests
+- POST /api/requests
+- PUT /api/requests/:id
 
-POST /api/communities – cria
+Dashboard & Chat
+- GET /api/dashboard/summary
+- GET /api/chat?channel=geral
+- POST /api/chat – { channel, text }
 
-GET /api/communities/:id
+Headers comuns: Authorization: Bearer <TOKEN>
 
-PUT /api/communities/:id
-
-DELETE /api/communities/:id
-
-Crops (token obrigatório)
-
-GET /api/crops
-
-POST /api/crops
-
-GET /api/crops/:id
-
-PUT /api/crops/:id
-
-DELETE /api/crops/:id
-
-Headers:
-Authorization: Bearer <TOKEN>
-
-8) Frontend – Páginas & Recursos
+9) Frontend – Páginas & Recursos
 
 Home: herói com busca, “visão geral” (cards), seções de FAQ, recursos e chamadas.
 
@@ -220,7 +294,7 @@ Busca: /buscar?q=... – usa api.js para retornar dados da API e renderiza Publi
 
 Dashboard/Comunidades: áreas de gestão (CRUD) protegidas.
 
-9) Scripts úteis
+10) Scripts úteis
 Backend
 "scripts": {
   "dev": "nodemon server.js",
@@ -235,20 +309,20 @@ Frontend
   "preview": "vite preview"
 }
 
-10) Troubleshooting (erros reais que já ocorreram)
-10.1 MongoDB URI undefined
+11) Troubleshooting (erros reais que já ocorreram)
+11.1 MongoDB URI undefined
 Erro ao conectar no MongoDB: The `uri` parameter to `openUri()` must be a string
 
 
 → Defina MONGODB_URI em backend/.env e reinicie o servidor.
 
-10.2 Falta de pacotes no frontend
+11.2 Falta de pacotes no frontend
 Cannot find package '@vitejs/plugin-react'
 
 
 → npm i -D @vitejs/plugin-react (e rode npm run dev).
 
-10.3 PowerShell não remove node_modules com rmdir /s /q
+11.3 PowerShell não remove node_modules com rmdir /s /q
 
 Use:
 
@@ -256,24 +330,24 @@ Remove-Item -Recurse -Force .\node_modules
 # ou:
 cmd /c rmdir /s /q node_modules
 
-10.4 Tela branca / erro de import
+11.4 Tela branca / erro de import
 
 Import apontando para arquivo que não existe (Vite overlay vermelho).
 
 Solução: criar o arquivo com export default e caminho exato, sem acentos (ex.: Regioes.jsx, não Regiões.jsx).
 
-10.5 useAuth() undefined no Navbar
+11.5 useAuth() undefined no Navbar
 Cannot destructure property 'user' of 'useAuth(...)' as it is undefined
 
 
 → Faltou <AuthProvider> em main.jsx ou Navbar destruturando sem checar.
 Corrigido envolvendo <App /> com <AuthProvider> e usando destruturação segura no Navbar.
 
-10.6 Link is not defined no Home
+11.6 Link is not defined no Home
 
 → Faltou import { Link } from "react-router-dom" no Home.jsx.
 
-10.7 Identificador duplicado
+11.7 Identificador duplicado
 Identifier 'useNavigate' has already been declared
 
 
@@ -281,7 +355,7 @@ Identifier 'useNavigate' has already been declared
 
 import { Link, useNavigate } from "react-router-dom";
 
-10.8 Git: remote já existe / push rejeitado
+11.8 Git: remote já existe / push rejeitado
 
 error: remote origin already exists. → use git remote set-url origin <url>.
 
@@ -293,7 +367,7 @@ git pull --rebase origin main
 # resolva conflitos, depois:
 git push -u origin main
 
-11) Qualidade, Segurança & Padrões
+12) Qualidade, Segurança & Padrões
 
 Senhas com bcrypt (saltRounds recomendados: 10–12).
 
@@ -305,7 +379,7 @@ ESLint/Prettier (opcional) para padronização de código.
 
 DTOs/validações (Zod/Yup) – próximos passos.
 
-12) Roadmap (alinhado ao DDE/ERS)
+13) Roadmap (alinhado ao DDE/ERS)
 
 MVP (entregue / em curso)
 
@@ -343,7 +417,7 @@ Futuro
 
  IA para insights de produção/demanda
 
-13) Contribuição
+14) Contribuição
 
 Fork → git clone → git checkout -b feature/minha-feature
 
@@ -353,11 +427,11 @@ npm run lint (se configurado)
 
 Pull Request com descrição clara (antes/depois, screenshots se UI).
 
-14) Licença
+15) Licença
 
 Projeto acadêmico com fins sociais. Licença a definir (MIT sugerida).
 
-15) Contato / Suporte
+16) Contato / Suporte
 
 Suporte SACRI: 2024130014@AESA-CESA.BR
 

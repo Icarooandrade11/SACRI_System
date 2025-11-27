@@ -1,9 +1,10 @@
 // src/pages/Home.jsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext.jsx";
 import { ROLES } from "../context/AuthContext.jsx";
+import { PUBLIC_PAGES } from "../data/publicPages";
 
 
 // --- Seções (conforme seu projeto)
@@ -26,6 +27,26 @@ export default function Home() {
   const userRole = user?.role ?? null;
   const notificationsAllowed = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO];
   const canSeeAdminFeedback = userRole ? notificationsAllowed.includes(userRole) : false;
+
+  const normalizedQuery = q.trim().toLowerCase();
+
+  const suggestedPages = useMemo(() => {
+    if (!normalizedQuery) return [];
+
+    const scored = PUBLIC_PAGES.map((page) => {
+      const haystack = [page.title, page.description, page.path, ...(page.tags || [])]
+        .filter(Boolean)
+        .map((item) => item.toLowerCase());
+
+      const matches = haystack.filter((field) => field.includes(normalizedQuery)).length;
+
+      return { ...page, matches };
+    })
+      .filter((page) => page.matches > 0)
+      .sort((a, b) => b.matches - a.matches || a.title.localeCompare(b.title));
+
+    return scored.slice(0, 5);
+  }, [normalizedQuery]);
 
   function handleSearch(e) {
     e.preventDefault();
@@ -109,13 +130,66 @@ export default function Home() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
+
+              {normalizedQuery && (
+                <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl bg-white/65 shadow-[0_10px_50px_rgba(0,0,0,.12)] border border-white/10 p-4 backdrop-blur">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-xs uppercase font-semibold text-emerald-700">Filtrando</p>
+                      <p className="text-sm text-slate-600">Ideias rápidas com base no que já temos disponível</p>
+                    </div>
+                    <button
+                      type="submit"
+                      className="hidden sm:inline-flex items-center gap-5 rounded-full bg-emerald-600 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-emerald-700 transition"
+                    >
+                      Buscar “{q.trim()}”
+                    </button>
+                  </div>
+
+                  {suggestedPages.length > 0 ? (
+                    <div className="space-y-2">
+                      {suggestedPages.map((page) => (
+                        <button
+                          key={page.path}
+                          type="button"
+                          onMouseDown={() => setQ(page.title)}
+                          className="w-full text-left rounded-xl border border-emerald-100 bg-emerald-50/60 hover:bg-emerald-100 transition p-3 flex items-center justify-between gap-3"
+                        >
+                          <div>
+                            <p className="text-sm font-bold text-emerald-800">{page.title}</p>
+                            <p className="text-xs text-slate-600 max-w-[240px] truncate">{page.description}</p>
+                          </div>
+                          <span className="text-[10px] uppercase font-semibold text-emerald-700 bg-white/80 border border-emerald-100 rounded-full px-3 py-1">
+                            Acessar
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-slate-600">Nenhuma sugestão encontrada. Pressione Enter para buscar.</div>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {PUBLIC_PAGES.slice(0, 4).map((page) => (
+                      <button
+                        key={page.path}
+                        type="button"
+                        onMouseDown={() => setQ(page.title)}
+                        className="px-3 py-2 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition"
+                      >
+                        {page.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </form>
 
           {/* Título principal */}
           <h1
             className="text-white font-extrabold leading-[0.9] drop-shadow-[0_4px_16px_rgba(0,0,0,.15)]
-                       text-[56px] sm:text-[72px] md:text-[96px]"
+                       text-[56px] sm:text-[72px] md:text-[96px] -z-0"
           >
             Bem-vindo
             <br />

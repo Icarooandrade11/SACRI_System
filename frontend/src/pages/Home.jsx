@@ -132,8 +132,8 @@ export default function Home() {
               />
 
               {normalizedQuery && (
-                <div className="absolute left-0 right-0 top-full mt-2 rounded-3xl bg-white/65 shadow-[0_10px_50px_rgba(0,0,0,.12)] border border-white/10 p-4 backdrop-blur">
-                  <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="absolute left-0 right-0 top-full mt-1 rounded-2xl bg-white/85 shadow-[0_1px_50px_rgba(0,0,10,.12)] border border-white/50 p-4 backdrop-blur">
+                  <div className="flex items-center justify-between gap-5 mb-2">
                     <div>
                       <p className="text-xs uppercase font-semibold text-emerald-700">Filtrando</p>
                       <p className="text-sm text-slate-600">Ideias rápidas com base no que já temos disponível</p>
@@ -189,7 +189,7 @@ export default function Home() {
           {/* Título principal */}
           <h1
             className="text-white font-extrabold leading-[0.9] drop-shadow-[0_4px_16px_rgba(0,0,0,.15)]
-                       text-[56px] sm:text-[72px] md:text-[96px] -z-0"
+                       text-[56px] sm:text-[72px] md:text-[96px] -z-10 relative"
           >
             Bem-vindo
             <br />

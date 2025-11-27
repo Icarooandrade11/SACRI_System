@@ -29,8 +29,9 @@ export default function Home() {
 
   function handleSearch(e) {
     e.preventDefault();
-    if (!q.trim()) return;
-    navigate(`/buscar?q=${encodeURIComponent(q.trim())}`);
+    const normalized = q.trim();
+    const queryParam = normalized ? `?q=${encodeURIComponent(normalized)}` : "";
+    navigate(`/buscar${queryParam}`);
   }
 
   const float = {

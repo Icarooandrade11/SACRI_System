@@ -97,3 +97,40 @@ export async function sendPasswordRecoveryEmail({ to, name, link }) {
   }
   return { delivered: true, id: info.messageId };
 }
+
+export async function sendRoleApprovalRequestEmail({ requester, approvalLink }) {
+  const to = "systemsacri@gmail.com";
+  const subject = "SACRI — Aprovação de cadastro especial";
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;color:#0f172a">
+      <h2 style="color:#0ea5b9">Novo cadastro aguardando aprovação</h2>
+      <p><strong>Nome:</strong> ${requester?.name || ""}</p>
+      <p><strong>E-mail:</strong> ${requester?.email || ""}</p>
+      <p><strong>Papel solicitado:</strong> ${requester?.role || ""}</p>
+      ${requester?.phone ? `<p><strong>Telefone:</strong> ${requester.phone}</p>` : ""}
+      ${requester?.organization ? `<p><strong>Organização:</strong> ${requester.organization}</p>` : ""}
+      <p style="margin-top:16px">Confirme ou rejeite manualmente este cadastro.</p>
+      <p>Para aprovar diretamente, clique no botão abaixo:</p>
+      <p><a href="${approvalLink}" style="background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Aprovar cadastro</a></p>
+    </div>
+  `;
+
+  const t = await getTransporter();
+  if (!t) {
+    console.info('📧 [MAIL MOCK - sem SMTP válido]', {
+      reason: transportError || 'Variáveis incompletas',
+      to,
+      subject,
+    });
+    console.info(html);
+    return { delivered: false, mocked: true, reason: transportError || 'missing-env' };
+  }
+
+  const info = await t.sendMail({ from: fromAddress, to, subject, html });
+  console.log('[mailer] Enviado:', info.messageId, info.response);
+  if (info.rejected?.length) {
+    throw new Error('E-mail rejeitado: ' + info.rejected.join(', '));
+  }
+  return { delivered: true, id: info.messageId };
+}

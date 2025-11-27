@@ -9,6 +9,12 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, enum: Object.values(ROLES), default: ROLES.MORADOR },
     phone: String,
+      approvalStatus: {
+      type: String,
+      enum: ["approved", "pending", "rejected"],
+      default: "approved",
+    },
+    approvalToken: String,
     organization: String,
     resetPasswordToken: String,
     resetPasswordExpires: Date,

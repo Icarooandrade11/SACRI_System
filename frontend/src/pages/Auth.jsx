@@ -80,14 +80,23 @@ function SignupForm() {
   const navigate = useNavigate();
   const [f, setF] = useState({ name: "", email: "", role: ROLES.MORADOR, password: "", phone: "", organization: "" });
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setInfo("");
     setLoading(true);
     try {
       const { data } = await api.post("/auth/register", f);
+      if (data?.pendingApproval) {
+        setInfo(
+          data?.message ||
+            "Cadastro recebido! Vamos validar seus dados e enviaremos a confirmação por e-mail."
+        );
+        return;
+      }
       login(data);
       if (data.role === ROLES.MORADOR) navigate("/", { replace: true });
       else navigate("/fornecedor", { replace: true });
@@ -165,6 +174,7 @@ function SignupForm() {
       <button className={`btn btn-success rounded-full w-full ${loading && "loading"}`} disabled={loading}>
         {loading ? "Enviando..." : "Create Account"}
       </button>
+      {info && <p className="text-sm text-emerald-700 text-center">{info}</p>}
       {error && <p className="text-sm text-red-600 text-center">{error}</p>}
       <div className="text-sm">
         ou <Link className="link link-primary" to="/login">Log in</Link>

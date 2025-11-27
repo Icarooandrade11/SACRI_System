@@ -25,6 +25,15 @@ body { /* @apply bg-base-100;  <- remova isso */
   }
 }
 
+  /* Oculta barras de rolagem sem desabilitar o scroll */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
 /* ======= Ondas/bolhas suaves do painel teal ======= */
 .wave-bubble {
   position: absolute;

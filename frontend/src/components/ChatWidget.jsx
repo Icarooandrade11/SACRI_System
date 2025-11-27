@@ -119,7 +119,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 z-40 flex flex-col items-end gap-2 pointer-events-none">
+    <div className="fixed bottom-5 right-4 left-5 sm:left-auto sm:right-5 z-30 flex flex-col items-end gap-1 pointer-events-none">
       <button
         onClick={() => setOpen((v) => !v)}
         className="rounded-full bg-[#0e7490] text-white px-5 py-3 shadow-2xl hover:bg-[#0c6a81] pointer-events-auto"
@@ -129,8 +129,8 @@ export default function ChatWidget() {
       </button>
 
       {open && (
-        <div className="w-full sm:w-96 max-w-[520px] rounded-2xl bg-white shadow-2xl border border-black/5 overflow-hidden pointer-events-auto">
-          <div className="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-[#A8E6A3] to-[#CDECF9]">
+        <div className="w-full sm:w-96 max-w-[500px] rounded-2xl bg-white shadow-2xl border border-black/5 overflow-hidden pointer-events-auto max-h-[50vh] sm:max-h-[90vh] flex flex-col">
+          <div className="flex justify-between items-center px-3 py-3 bg-gradient-to-r from-[#A8E6A3] to-[#CDECF9]">
             <div>
               <p className="text-xs uppercase tracking-widest text-black/70">Chat em tempo real</p>
               <p className="font-semibold text-[#0e2a47]">Conversas rápidas</p>
@@ -143,7 +143,7 @@ export default function ChatWidget() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 border-b border-gray-100 px-2 py-2 text-sm">
+           <div className="flex flex-wrap sm:flex-nowrap gap-2 border-b border-gray-100 px-2 py-1 text-sm overflow-x-auto scrollbar-none">
             {availableThreads.map((t) => (
               <button
                 key={t.id}
@@ -158,7 +158,7 @@ export default function ChatWidget() {
             ))}
           </div>
 
-          <div className="max-h-[60vh] overflow-y-auto px-4 py-3 space-y-3 bg-[#F9FBF7]">
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#F9FBF7] scrollbar-none">
             {loading && <p className="text-sm text-gray-500">Carregando mensagens...</p>}
             {!loading && threadMessages.length === 0 && (
               <p className="text-sm text-gray-500">Nenhuma mensagem ainda. Inicie a conversa!</p>

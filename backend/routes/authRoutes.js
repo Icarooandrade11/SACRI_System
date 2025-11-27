@@ -7,6 +7,7 @@ import {
   logoutUser,
   forgotPassword,
   resetPassword,
+  approveRegistration,
 } from "../controllers/authController.js";
 import protect from "../middleware/authMiddleware.js";
 
@@ -19,5 +20,6 @@ router.put("/me", protect, updateProfile);
 router.post("/logout", protect, logoutUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.get("/approve/:token", approveRegistration);
 
 export default router;

@@ -52,7 +52,7 @@ export default function CommunicationPanel() {
   }
 
   return (
-    <div className="fixed top-24 left-4 z-40">
+    <div className="fixed top-20 left-3 z-40">
       <button
         onClick={() => setOpen((v) => !v)}
         className="rounded-full bg-[#0e7490] text-white px-4 py-2 shadow-lg hover:bg-[#0c6a81] transition"
@@ -254,24 +254,6 @@ export default function CommunicationPanel() {
                 Enviar solicitação
               </button>
             </form>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-[#0e2a47]">Precisa de ajuda logística?</p>
-            <textarea
-              value={logisticNote}
-              onChange={(e) => setLogisticNote(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-              placeholder="Descreva sua rota, entrega ou apoio necessário"
-              rows={3}
-            />
-            <button
-              onClick={handleLogisticRequest}
-              className="w-full rounded-full bg-[#0e7490] text-white py-2 font-semibold hover:bg-[#0c6a81]"
-            >
-              Enviar pedido ao Admin
-            </button>
-            <p className="text-[11px] text-gray-500">Envie dúvidas ou urgências sem sair da página.</p>
           </div>
         </div>
       </motion.aside>

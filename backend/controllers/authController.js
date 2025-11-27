@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { ROLES } from "../utils/roles.js";
-import { sendPasswordRecoveryEmail } from "../utils/mailer.js";
+import { sendPasswordRecoveryEmail, sendRoleApprovalRequestEmail } from "../utils/mailer.js";
 import { setUserOffline, setUserOnline } from "../utils/presence.js";
 import { emitPresenceSnapshot } from "../utils/socket.js";
 import { attachAuthCookie, clearAuthCookie } from "../utils/cookies.js";
@@ -16,6 +16,7 @@ const buildUserResponse = (user) => ({
   phone: user.phone,
   organization: user.organization,
   token: generateToken(user._id),
+  approvalStatus: user.approvalStatus,
 });
 
 export const registerUser = asyncHandler(async (req, res) => {
@@ -31,7 +32,41 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   const normalizedRole = Object.values(ROLES).includes(role) ? role : ROLES.MORADOR;
-  const user = await User.create({ name, email, password, role: normalizedRole, phone, organization });
+  const requiresApproval = [ROLES.GESTOR, ROLES.ONG, ROLES.PARCEIRO].includes(normalizedRole);
+  const approvalToken = requiresApproval ? crypto.randomBytes(24).toString("hex") : undefined;
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role: normalizedRole,
+    phone,
+    organization,
+    approvalStatus: requiresApproval ? "pending" : "approved",
+    approvalToken,
+  });
+
+  if (requiresApproval) {
+    const approvalLinkBase = process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`;
+    const approvalLink = `${approvalLinkBase}/api/auth/approve/${approvalToken}`;
+    await sendRoleApprovalRequestEmail({
+      requester: {
+        name,
+        email,
+        role: normalizedRole,
+        phone,
+        organization,
+      },
+      approvalLink,
+    });
+
+    return res.status(202).json({
+      message:
+        "Cadastro recebido! Aguarde nossa confirmação por e-mail para acessar o SACRI System.",
+      pendingApproval: true,
+    });
+  }
+
   const payload = buildUserResponse(user);
   attachAuthCookie(res, payload.token);
 
@@ -43,6 +78,14 @@ export const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
+        if (user.approvalStatus === "pending") {
+      return res
+        .status(403)
+        .json({ message: "Cadastro aguardando confirmação do administrador." });
+    }
+    if (user.approvalStatus === "rejected") {
+      return res.status(403).json({ message: "Cadastro foi recusado. Contate o suporte." });
+    }
     await setUserOnline(user._id);
     emitPresenceSnapshot();
     const payload = buildUserResponse(user);
@@ -61,6 +104,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     role: req.user.role,
     phone: req.user.phone,
     organization: req.user.organization,
+    approvalStatus: req.user.approvalStatus,
     online: req.user.online,
     lastSeenAt: req.user.lastSeenAt,
   });
@@ -86,6 +130,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     role: updated.role,
     phone: updated.phone,
     organization: updated.organization,
+    approvalStatus: updated.approvalStatus,
     online: updated.online,
     lastSeenAt: updated.lastSeenAt,
   });
@@ -143,4 +188,20 @@ export const resetPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   return res.json({ message: "Senha atualizada com sucesso" });
+});
+
+export const approveRegistration = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  if (!token) return res.status(400).json({ message: "Token de aprovação ausente" });
+
+  const user = await User.findOne({ approvalToken: token, approvalStatus: "pending" });
+  if (!user) {
+    return res.status(404).json({ message: "Solicitação não encontrada ou já aprovada" });
+  }
+
+  user.approvalStatus = "approved";
+  user.approvalToken = undefined;
+  await user.save();
+
+  return res.json({ message: `Cadastro de ${user.name} aprovado com sucesso.` });
 });

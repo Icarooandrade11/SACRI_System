@@ -28,6 +28,8 @@ import PainelGestao from "./features/fornecedor/pages/PainelGestao.jsx";
 import OrgaosApd from "./features/fornecedor/pages/OrgaosAPD.jsx";
 import PerfilFornecedor from "./features/fornecedor/pages/Perfil.jsx"; // NOVO
 import CommunicationPanel from "./components/CommunicationPanel.jsx";
+import Relatorios from "./features/fornecedor/pages/Relatorios.jsx";
+import Suporte from "./features/fornecedor/pages/Suporte.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
 
 
@@ -86,6 +88,8 @@ export default function App() {
             <Route path="status" element={<StatusSolicitacoes />} />
             <Route path="painel" element={<PainelGestao />} />
             <Route path="orgaos" element={<OrgaosApd />} />
+            <Route path="relatorios" element={<Relatorios />} />
+            <Route path="suporte" element={<Suporte />} />
             {/* NOVO: página de perfil do fornecedor */}
             <Route path="perfil" element={<PerfilFornecedor />} />
           </Route>

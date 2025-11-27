@@ -11,6 +11,8 @@ const items = [
   { to: "/fornecedor/painel", label: "PAINEL DE GESTÃO" },
   // alinhei com as rotas: path "orgaos"
   { to: "/fornecedor/orgaos", label: "ÓRGÃOS - APD" },
+  { to: "/fornecedor/relatorios", label: "RELATÓRIOS" },
+  { to: "/fornecedor/suporte", label: "SUPORTE" },
 ];
 
 export default function FornecedorLayout() {
@@ -115,11 +117,19 @@ export default function FornecedorLayout() {
               ))}
             </nav>
             <div className="mt-5">
-              <div className="mx-auto w-20 flex justify-between opacity-70">
-                <span className="w-2.5 h-2.5 bg-black rounded-full" />
-                <span className="w-2.5 h-2.5 bg-black/60 rounded-full" />
-                <span className="w-2.5 h-2.5 bg-black/30 rounded-full" />
+              <div className="mx-auto w-fit flex items-center gap-2 opacity-90" role="group" aria-label="Atalhos do painel">
+                {[{ label: "Início", to: "/fornecedor" }, { label: "Relatórios", to: "/fornecedor/relatorios" }, { label: "Suporte", to: "/fornecedor/suporte" }].map((dot) => (
+                  <button
+                    key={dot.to}
+                    onClick={() => navigate(dot.to)}
+                    className="w-3 h-3 rounded-full border border-black/40 bg-black/20 hover:bg-emerald-500 hover:border-emerald-600 transition"
+                    title={dot.label}
+                    aria-label={dot.label}
+                    type="button"
+                  />
+                ))}
               </div>
+              <p className="text-center text-[11px] uppercase font-semibold text-gray-500 mt-2">Acessos rápidos</p>
             </div>
           </div>
         </aside>

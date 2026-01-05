@@ -15,14 +15,33 @@ import errorHandler from "./middleware/errorMiddleware.js";
 
 const app = express();
 
-const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
-const corsOptions = { origin: allowedOrigin, credentials: true };
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://sacri-system.vercel.app"
+];
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.options("*", cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => res.send("🌾 SACRI API rodando..."));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/communities", communityRoutes);
 app.use("/api/plantations", plantationRoutes);
@@ -35,5 +54,4 @@ app.use("/api/contacts", contactRoutes);
 
 app.use(errorHandler);
 
-export { corsOptions };
 export default app;

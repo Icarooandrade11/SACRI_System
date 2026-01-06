@@ -17,31 +17,37 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://sacri-system.vercel.app"
+  "https://sacri-system.vercel.app",
 ];
 
-app.use(cors({
+// 🔐 CORS ÚNICO E CONSISTENTE
+const corsOptions = {
   origin: function (origin, callback) {
+    // permite requests sem origin (Render, Postman, health checks)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     }
+
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => res.send("🌾 SACRI API rodando..."));
+app.get("/", (req, res) => {
+  res.send("🌾 SACRI API rodando...");
+});
 
+// 🔗 ROTAS
 app.use("/api/auth", authRoutes);
 app.use("/api/communities", communityRoutes);
 app.use("/api/plantations", plantationRoutes);
@@ -52,6 +58,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contacts", contactRoutes);
 
+// ❗ sempre por último
 app.use(errorHandler);
 
 export default app;

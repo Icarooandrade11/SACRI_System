@@ -5,13 +5,14 @@ import connectDB from "./config/db.js";
 import { initSocket } from "./utils/socket.js";
 import app from "./app.js";
 
+// 🔌 conecta no banco antes de subir o servidor
 connectDB();
 
 const PORT = process.env.PORT || 5000;
 
 const server = createServer(app);
 
-// 🔥 Socket sem corsOptions (CORS já está no app.js)
+// 🔥 Socket.IO inicializado após o HTTP server
 initSocket(server);
 
 server.listen(PORT, () => {

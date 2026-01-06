@@ -18,19 +18,24 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://sacri-system.vercel.app",
+  "https://sacri-system.onrender.com"
 ];
 
 // 🔐 CORS ÚNICO E CONSISTENTE
 const corsOptions = {
   origin: function (origin, callback) {
-    // permite requests sem origin (Render, Postman, health checks)
+    // permite chamadas sem origin (Render, health check, Postman)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // normaliza barra final
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS"));
+    console.error("❌ CORS bloqueado para:", origin);
+    return callback(null, false); // ⬅️ NÃO lançar Error
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -59,6 +64,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/contacts", contactRoutes);
 
 // ❗ sempre por último
-app.use(errorHandler);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 export default app;
